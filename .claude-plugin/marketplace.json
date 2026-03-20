@@ -361,6 +361,16 @@
         "email": "support@anthropic.com"
       },
       "source": "./plugins/skill-creator"
+    },
+    {
+      "name": "fullstack-website-designer",
+      "version": "1.0.0",
+      "description": "Design and code complete full-stack websites with cutting-edge 3D visuals (Three.js, WebGL, React Three Fiber), immersive animations (GSAP, Framer Motion), and modern design systems (glassmorphism, aurora gradients, neomorphism) using parallel specialist agents.",
+      "author": {
+        "name": "Arya Kianian",
+        "email": "opensource@trailofbits.com"
+      },
+      "source": "./plugins/fullstack-website-designer"
     }
   ]
 }

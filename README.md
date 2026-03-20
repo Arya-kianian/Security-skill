@@ -97,6 +97,12 @@ cd /path/to/parent  # e.g., if repo is at ~/projects/skills, be in ~/projects
 | [skill-improver](plugins/skill-improver/) | Iterative skill refinement loop using automated fix-review cycles |
 | [workflow-skill-design](plugins/workflow-skill-design/) | Design patterns for workflow-based Claude Code skills with review agent |
 
+### Web Development
+
+| Plugin | Description |
+|--------|-------------|
+| [fullstack-website-designer](plugins/fullstack-website-designer/) | Design and code complete full-stack websites with 3D visuals, immersive animations, and modern design systems using parallel specialist agents |
+
 ### Team Management
 
 | Plugin | Description |
