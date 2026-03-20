@@ -1,0 +1,39 @@
+{
+  "expectations": [
+    {
+      "text": "Delivers a single self-contained index.html file (no build step required)",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Includes Three.js or CSS 3D animation in the hero section",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Has at least 4 distinct sections: hero, about, skills/projects, contact",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Uses a dark color scheme throughout",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Implements scroll animations or transitions between sections",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Layout is responsive (uses media queries or fluid units)",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "No placeholder TODOs or lorem ipsum text remain",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    }
+  ]
+}

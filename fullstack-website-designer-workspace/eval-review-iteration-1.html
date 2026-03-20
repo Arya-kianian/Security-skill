@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "fullstack-website-designer", "runs": [{"id": "portfolio-static-3d-hero-with_skill", "prompt": "Build me a personal portfolio website. I'm a frontend developer. I want something dark, futuristic, with a 3D animated background \u2014 maybe floating particles or a rotating geometric shape. Include sections for hero, about, skills, projects (show 3 placeholder projects), and contact. Keep it to a single HTML file with vanilla JS so I can just open it in a browser.", "eval_id": 0, "outputs": [{"name": "index.html", "type": "text", "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Alex Chen \u2014 Frontend Developer</title>\n  <meta name=\"description\" content=\"Frontend developer specializing in immersive 3D web experiences, animations, and cutting-edge UI engineering.\" />\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n  <link href=\"https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\" />\n  <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js\"></script>\n  <script src=\"https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js\"></script>\n  <style>\n    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n\n    :root {\n      --bg: #04040d;\n      --surface: #0c0c1e;\n      --surface-2: #111128;\n      --border: rgba(255,255,255,0.08);\n      --primary: #6366f1;\n      --accent: #8b5cf6;\n      --pink: #ec4899;\n      --text: #f1f5f9;\n      --text-muted: #94a3b8;\n      --font-display: 'Syne', sans-serif;\n      --font-body: 'Plus Jakarta Sans', sans-serif;\n      --font-mono: 'JetBrains Mono', monospace;\n      --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);\n      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);\n    }\n\n    @media (prefers-reduced-motion: reduce) {\n      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }\n    }\n\n    html { scroll-behavior: smooth; }\n\n    body {\n      background: var(--bg);\n      color: var(--text);\n      font-family: var(--font-body);\n      font-size: clamp(1rem, 2vw, 1.125rem);\n      line-height: 1.6;\n      overflow-x: hidden;\n    }\n\n    /* \u2500\u2500 Scroll Progress \u2500\u2500 */\n    .scroll-bar {\n      position: fixed; top: 0; left: 0; height: 2px; width: 100%;\n      background: var(--border); z-index: 999;\n    }\n    .scroll-bar-fill {\n      height: 100%;\n      background: linear-gradient(90deg, var(--primary), var(--pink));\n      transform-origin: left;\n      transform: scaleX(0);\n      transition: transform 0.1s linear;\n    }\n\n    /* \u2500\u2500 Nav \u2500\u2500 */\n    nav {\n      position: fixed; top: 0; left: 0; right: 0; z-index: 100;\n      display: flex; align-items: center; justify-content: space-between;\n      padding: 1.25rem 5%;\n      background: rgba(4, 4, 13, 0.6);\n      backdrop-filter: blur(20px);\n      border-bottom: 1px solid var(--border);\n      transition: background 0.3s;\n    }\n    .nav-logo {\n      font-family: var(--font-display);\n      font-weight: 800; font-size: 1.25rem;\n      background: linear-gradient(135deg, var(--primary), var(--pink));\n      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;\n      text-decoration: none;\n    }\n    .nav-links { display: flex; gap: 2rem; list-style: none; }\n    .nav-links a {\n      color: var(--text-muted); text-decoration: none;\n      font-size: 0.9rem; font-weight: 500;\n      transition: color 0.2s;\n    }\n    .nav-links a:hover { color: var(--text); }\n\n    /* \u2500\u2500 Hero \u2500\u2500 */\n    #hero {\n      position: relative; height: 100vh; min-height: 600px;\n      display: flex; flex-direction: column; align-items: center; justify-content: center;\n      overflow: hidden;\n    }\n    #hero-canvas {\n      position: absolute; inset: 0; width: 100%; height: 100%;\n      pointer-events: none;\n    }\n    .hero-content {\n      position: relative; z-index: 2;\n      text-align: center; padding: 0 5%;\n      max-width: 900px;\n    }\n    .hero-tag {\n      display: inline-block;\n      font-family: var(--font-mono); font-size: 0.8rem;\n      color: var(--primary);\n      border: 1px solid rgba(99,102,241,0.4);\n      border-radius: 999px; padding: 0.3rem 1rem;\n      margin-bottom: 1.5rem;\n      letter-spacing: 0.1em; text-transform: uppercase;\n    }\n    .hero-title {\n      font-family: var(--font-display);\n      font-size: clamp(3rem, 8vw, 6.5rem);\n      font-weight: 800; line-height: 1.05;\n      background: linear-gradient(135deg, #fff 30%, var(--primary) 60%, var(--pink) 100%);\n      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;\n      margin-bottom: 1.5rem;\n    }\n    .hero-sub {\n      color: var(--text-muted); font-size: clamp(1rem, 2vw, 1.2rem);\n      max-width: 550px; margin: 0 auto 2.5rem;\n    }\n    .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }\n    .btn {\n      display: inline-flex; align-items: center; gap: 0.5rem;\n      padding: 0.85rem 2rem; border-radius: 0.75rem; font-weight: 600;\n      font-size: 0.95rem; text-decoration: none; cursor: pointer;\n      transition: transform 0.2s var(--ease-spring), box-shadow 0.2s;\n      border: none;\n    }\n    .btn-primary {\n      background: linear-gradient(135deg, var(--primary), var(--accent));\n      color: #fff;\n      box-shadow: 0 0 30px rgba(99,102,241,0.4);\n    }\n    .btn-primary:hover {\n      transform: translateY(-3px) scale(1.03);\n      box-shadow: 0 0 50px rgba(99,102,241,0.6);\n    }\n    .btn-ghost {\n      background: var(--surface);\n      color: var(--text);\n      border: 1px solid var(--border);\n    }\n    .btn-ghost:hover { transform: translateY(-2px); border-color: var(--primary); }\n\n    .hero-scroll {\n      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);\n      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;\n      color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.1em;\n    }\n    .scroll-dot {\n      width: 1px; height: 40px;\n      background: linear-gradient(to bottom, var(--primary), transparent);\n      animation: scroll-drop 1.5s ease-in-out infinite;\n    }\n    @keyframes scroll-drop {\n      0%, 100% { opacity: 0; transform: scaleY(0); transform-origin: top; }\n      50% { opacity: 1; transform: scaleY(1); }\n    }\n\n    /* \u2500\u2500 Sections \u2500\u2500 */\n    section { padding: clamp(4rem, 8vw, 8rem) 5%; }\n    .section-tag {\n      font-family: var(--font-mono); font-size: 0.78rem;\n      color: var(--primary); letter-spacing: 0.12em; text-transform: uppercase;\n      margin-bottom: 1rem;\n    }\n    .section-title {\n      font-family: var(--font-display);\n      font-size: clamp(2rem, 5vw, 3.5rem);\n      font-weight: 800; line-height: 1.1;\n      margin-bottom: 1.5rem;\n    }\n    .section-sub {\n      color: var(--text-muted); max-width: 600px;\n      margin-bottom: 3rem; font-size: 1.05rem;\n    }\n\n    /* \u2500\u2500 About \u2500\u2500 */\n    #about { background: var(--surface); }\n    .about-grid {\n      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem;\n      align-items: center; max-width: 1100px; margin: 0 auto;\n    }\n    .about-visual {\n      position: relative; aspect-ratio: 1;\n      border-radius: 2rem;\n      background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1));\n      border: 1px solid var(--border);\n      display: flex; align-items: center; justify-content: center;\n      overflow: hidden;\n    }\n    .about-avatar-ring {\n      width: 180px; height: 180px;\n      border-radius: 50%;\n      background: linear-gradient(135deg, var(--primary), var(--pink));\n      padding: 3px;\n    }\n    .about-avatar-inner {\n      width: 100%; height: 100%; border-radius: 50%;\n      background: var(--surface);\n      display: flex; align-items: center; justify-content: center;\n      font-size: 5rem;\n    }\n    .about-blob {\n      position: absolute; inset: -50%; z-index: 0;\n      background: radial-gradient(circle at 50% 50%, rgba(99,102,241,0.15), transparent 60%);\n      border-radius: 50%; animation: blob-spin 12s linear infinite;\n    }\n    @keyframes blob-spin { to { transform: rotate(360deg); } }\n    .about-stats {\n      display: grid; grid-template-columns: 1fr 1fr;\n      gap: 1.5rem; margin-top: 2rem;\n    }\n    .stat {\n      padding: 1.25rem; border-radius: 1rem;\n      background: var(--surface-2); border: 1px solid var(--border);\n    }\n    .stat-num {\n      font-family: var(--font-display); font-size: 2rem; font-weight: 800;\n      background: linear-gradient(135deg, var(--primary), var(--pink));\n      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;\n    }\n    .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; }\n\n    /* \u2500\u2500 Skills \u2500\u2500 */\n    #skills { background: var(--bg); }\n    .skills-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n      gap: 1.5rem; max-width: 1100px; margin: 0 auto;\n    }\n    .skill-card {\n      padding: 1.75rem; border-radius: 1.25rem;\n      background: var(--surface);\n      border: 1px solid var(--border);\n      transition: transform 0.3s var(--ease-spring), border-color 0.3s, box-shadow 0.3s;\n      cursor: default;\n    }\n    .skill-card:hover {\n      transform: translateY(-8px) rotate(-0.5deg);\n      border-color: rgba(99,102,241,0.5);\n      box-shadow: 0 20px 60px rgba(99,102,241,0.15);\n    }\n    .skill-icon { font-size: 2.5rem; margin-bottom: 1rem; }\n    .skill-name {\n      font-family: var(--font-display); font-weight: 700; font-size: 1.15rem;\n      margin-bottom: 0.5rem;\n    }\n    .skill-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }\n    .tag {\n      font-family: var(--font-mono); font-size: 0.7rem;\n      padding: 0.2rem 0.6rem; border-radius: 999px;\n      background: rgba(99,102,241,0.15); color: var(--primary);\n      border: 1px solid rgba(99,102,241,0.3);\n    }\n\n    /* \u2500\u2500 Projects \u2500\u2500 */\n    #projects { background: var(--surface); }\n    .projects-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));\n      gap: 2rem; max-width: 1100px; margin: 0 auto;\n    }\n    .project-card {\n      border-radius: 1.5rem;\n      background: var(--surface-2);\n      border: 1px solid var(--border);\n      overflow: hidden;\n      transition: transform 0.4s var(--ease-expo), box-shadow 0.4s;\n    }\n    .project-card:hover {\n      transform: translateY(-12px);\n      box-shadow: 0 30px 80px rgba(0,0,0,0.5);\n    }\n    .project-thumb {\n      aspect-ratio: 16/9;\n      display: flex; align-items: center; justify-content: center;\n      font-size: 4rem;\n      position: relative; overflow: hidden;\n    }\n    .project-thumb-1 { background: linear-gradient(135deg, #0f0f2e, #1a0a3e); }\n    .project-thumb-2 { background: linear-gradient(135deg, #0d1f2d, #0a3040); }\n    .project-thumb-3 { background: linear-gradient(135deg, #1a0e2e, #2d0a2e); }\n    .project-thumb::after {\n      content: '';\n      position: absolute; inset: 0;\n      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.6));\n    }\n    .project-body { padding: 1.5rem; }\n    .project-title {\n      font-family: var(--font-display); font-weight: 700; font-size: 1.2rem;\n      margin-bottom: 0.5rem;\n    }\n    .project-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.6; }\n    .project-links { display: flex; gap: 1rem; }\n    .project-link {\n      font-size: 0.85rem; color: var(--primary);\n      text-decoration: none; font-weight: 600;\n      display: flex; align-items: center; gap: 0.3rem;\n      transition: gap 0.2s;\n    }\n    .project-link:hover { gap: 0.5rem; }\n\n    /* \u2500\u2500 Contact \u2500\u2500 */\n    #contact { background: var(--bg); text-align: center; }\n    .contact-inner { max-width: 640px; margin: 0 auto; }\n    .contact-email {\n      display: inline-flex; align-items: center; gap: 0.75rem;\n      font-family: var(--font-mono); font-size: clamp(1rem, 2.5vw, 1.3rem);\n      color: var(--text); text-decoration: none;\n      padding: 1.25rem 2.5rem;\n      border-radius: 1rem;\n      background: var(--surface);\n      border: 1px solid var(--border);\n      margin: 2rem 0;\n      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;\n    }\n    .contact-email:hover {\n      border-color: var(--primary);\n      box-shadow: 0 0 40px rgba(99,102,241,0.2);\n      transform: translateY(-3px);\n    }\n    .socials { display: flex; justify-content: center; gap: 1.5rem; margin-top: 2rem; }\n    .social-link {\n      width: 48px; height: 48px; border-radius: 50%;\n      background: var(--surface); border: 1px solid var(--border);\n      display: flex; align-items: center; justify-content: center;\n      text-decoration: none; font-size: 1.2rem;\n      transition: border-color 0.2s, transform 0.2s var(--ease-spring);\n    }\n    .social-link:hover { border-color: var(--primary); transform: translateY(-4px) scale(1.1); }\n\n    /* \u2500\u2500 Footer \u2500\u2500 */\n    footer {\n      text-align: center; padding: 2rem 5%;\n      color: var(--text-muted); font-size: 0.85rem;\n      border-top: 1px solid var(--border);\n    }\n\n    /* \u2500\u2500 Reveal animations \u2500\u2500 */\n    [data-reveal] { opacity: 0; transform: translateY(40px); }\n    [data-reveal].visible { opacity: 1; transform: translateY(0); transition: opacity 0.8s var(--ease-expo), transform 0.8s var(--ease-expo); }\n    [data-stagger] > * { opacity: 0; transform: translateY(30px); }\n    [data-stagger].visible > * { opacity: 1; transform: translateY(0); }\n    [data-stagger].visible > *:nth-child(1) { transition: opacity 0.7s 0.05s var(--ease-expo), transform 0.7s 0.05s var(--ease-expo); }\n    [data-stagger].visible > *:nth-child(2) { transition: opacity 0.7s 0.15s var(--ease-expo), transform 0.7s 0.15s var(--ease-expo); }\n    [data-stagger].visible > *:nth-child(3) { transition: opacity 0.7s 0.25s var(--ease-expo), transform 0.7s 0.25s var(--ease-expo); }\n    [data-stagger].visible > *:nth-child(4) { transition: opacity 0.7s 0.35s var(--ease-expo), transform 0.7s 0.35s var(--ease-expo); }\n    [data-stagger].visible > *:nth-child(5) { transition: opacity 0.7s 0.45s var(--ease-expo), transform 0.7s 0.45s var(--ease-expo); }\n    [data-stagger].visible > *:nth-child(6) { transition: opacity 0.7s 0.55s var(--ease-expo), transform 0.7s 0.55s var(--ease-expo); }\n\n    @media (max-width: 768px) {\n      .nav-links { display: none; }\n      .about-grid { grid-template-columns: 1fr; }\n      .about-visual { max-width: 300px; margin: 0 auto; }\n    }\n  </style>\n</head>\n<body>\n\n  <div class=\"scroll-bar\"><div class=\"scroll-bar-fill\" id=\"scrollFill\"></div></div>\n\n  <nav role=\"banner\">\n    <a href=\"#hero\" class=\"nav-logo\">AC.</a>\n    <ul class=\"nav-links\">\n      <li><a href=\"#about\">About</a></li>\n      <li><a href=\"#skills\">Skills</a></li>\n      <li><a href=\"#projects\">Projects</a></li>\n      <li><a href=\"#contact\">Contact</a></li>\n    </ul>\n    <a href=\"#contact\" class=\"btn btn-primary\" style=\"padding: 0.6rem 1.25rem; font-size: 0.85rem;\">Hire me</a>\n  </nav>\n\n  <!-- \u2500\u2500 HERO \u2500\u2500 -->\n  <section id=\"hero\" role=\"main\">\n    <canvas id=\"hero-canvas\" aria-hidden=\"true\"></canvas>\n    <div class=\"hero-content\">\n      <span class=\"hero-tag\">Available for freelance &amp; full-time</span>\n      <h1 class=\"hero-title\">Crafting<br/>the Digital<br/>Future</h1>\n      <p class=\"hero-sub\">Frontend developer building immersive 3D web experiences, fluid animations, and pixel-perfect interfaces.</p>\n      <div class=\"hero-cta\">\n        <a href=\"#projects\" class=\"btn btn-primary\">View Projects \u2192</a>\n        <a href=\"#contact\" class=\"btn btn-ghost\">Get in touch</a>\n      </div>\n    </div>\n    <div class=\"hero-scroll\" aria-hidden=\"true\">\n      <div class=\"scroll-dot\"></div>\n      <span>Scroll</span>\n    </div>\n  </section>\n\n  <!-- \u2500\u2500 ABOUT \u2500\u2500 -->\n  <section id=\"about\" aria-labelledby=\"about-title\">\n    <div class=\"about-grid\">\n      <div>\n        <p class=\"section-tag\" data-reveal>// About me</p>\n        <h2 id=\"about-title\" class=\"section-title\" data-reveal>Building tomorrow's<br/>web, today.</h2>\n        <p class=\"section-sub\" data-reveal>I'm Alex Chen, a frontend developer obsessed with where art meets engineering. I specialize in Three.js, WebGL, and GSAP to build experiences that feel alive.</p>\n        <div class=\"about-stats\" data-stagger>\n          <div class=\"stat\"><div class=\"stat-num\">5+</div><div class=\"stat-label\">Years experience</div></div>\n          <div class=\"stat\"><div class=\"stat-num\">40+</div><div class=\"stat-label\">Projects shipped</div></div>\n          <div class=\"stat\"><div class=\"stat-num\">12</div><div class=\"stat-label\">Design awards</div></div>\n          <div class=\"stat\"><div class=\"stat-num\">\u221e</div><div class=\"stat-label\">Coffee consumed</div></div>\n        </div>\n      </div>\n      <div class=\"about-visual\" data-reveal>\n        <div class=\"about-blob\" aria-hidden=\"true\"></div>\n        <div class=\"about-avatar-ring\" style=\"position:relative;z-index:1;\">\n          <div class=\"about-avatar-inner\">\ud83d\udc68\u200d\ud83d\udcbb</div>\n        </div>\n      </div>\n    </div>\n  </section>\n\n  <!-- \u2500\u2500 SKILLS \u2500\u2500 -->\n  <section id=\"skills\" aria-labelledby=\"skills-title\">\n    <div style=\"max-width:1100px;margin:0 auto\">\n      <p class=\"section-tag\" data-reveal>// Toolbox</p>\n      <h2 id=\"skills-title\" class=\"section-title\" data-reveal>What I bring<br/>to the table</h2>\n      <div class=\"skills-grid\" data-stagger>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\ud83c\udfad</div>\n          <h3 class=\"skill-name\">3D &amp; WebGL</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Building real-time 3D scenes, shaders, and interactive visualizations.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">Three.js</span><span class=\"tag\">R3F</span>\n            <span class=\"tag\">GLSL</span><span class=\"tag\">WebGPU</span>\n          </div>\n        </article>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\u26a1</div>\n          <h3 class=\"skill-name\">Animation</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Scroll-driven narratives, micro-interactions, and motion-first design.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">GSAP</span><span class=\"tag\">Framer Motion</span>\n            <span class=\"tag\">Lenis</span><span class=\"tag\">CSS</span>\n          </div>\n        </article>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\u269b\ufe0f</div>\n          <h3 class=\"skill-name\">Frontend Frameworks</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Production-grade SPAs and SSR applications with modern React.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">React</span><span class=\"tag\">Next.js</span>\n            <span class=\"tag\">Vite</span><span class=\"tag\">Astro</span>\n          </div>\n        </article>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\ud83c\udfa8</div>\n          <h3 class=\"skill-name\">Design Systems</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Glassmorphism, aurora gradients, neomorphism \u2014 every modern aesthetic.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">Tailwind</span><span class=\"tag\">CSS-in-JS</span>\n            <span class=\"tag\">Figma</span><span class=\"tag\">Tokens</span>\n          </div>\n        </article>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\ud83d\udd27</div>\n          <h3 class=\"skill-name\">Backend &amp; APIs</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Full-stack capability when needed \u2014 REST, GraphQL, WebSockets.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">Node.js</span><span class=\"tag\">tRPC</span>\n            <span class=\"tag\">Prisma</span><span class=\"tag\">PostgreSQL</span>\n          </div>\n        </article>\n        <article class=\"skill-card\" tabindex=\"0\">\n          <div class=\"skill-icon\" aria-hidden=\"true\">\ud83d\ude80</div>\n          <h3 class=\"skill-name\">Performance</h3>\n          <p style=\"color:var(--text-muted);font-size:.9rem\">Core Web Vitals obsession \u2014 100 Lighthouse scores, sub-second LCP.</p>\n          <div class=\"skill-tags\">\n            <span class=\"tag\">Web Vitals</span><span class=\"tag\">Perf Profiling</span>\n            <span class=\"tag\">WASM</span><span class=\"tag\">Workers</span>\n          </div>\n        </article>\n      </div>\n    </div>\n  </section>\n\n  <!-- \u2500\u2500 PROJECTS \u2500\u2500 -->\n  <section id=\"projects\" aria-labelledby=\"projects-title\">\n    <div style=\"max-width:1100px;margin:0 auto\">\n      <p class=\"section-tag\" data-reveal>// Selected work</p>\n      <h2 id=\"projects-title\" class=\"section-title\" data-reveal>Things I've built</h2>\n      <div class=\"projects-grid\" data-stagger>\n        <article class=\"project-card\">\n          <div class=\"project-thumb project-thumb-1\">\ud83c\udf0c</div>\n          <div class=\"project-body\">\n            <h3 class=\"project-title\">NebulaOS Dashboard</h3>\n            <p class=\"project-desc\">A real-time analytics dashboard with WebGL particle visualizations and 3D data charts. Features live data streaming and gesture-based navigation.</p>\n            <div class=\"skill-tags\" style=\"margin-bottom:1rem\">\n              <span class=\"tag\">Three.js</span><span class=\"tag\">React</span><span class=\"tag\">WebSockets</span>\n            </div>\n            <div class=\"project-links\">\n              <a href=\"#\" class=\"project-link\" aria-label=\"Live demo of NebulaOS\">Live demo \u2192</a>\n              <a href=\"#\" class=\"project-link\" aria-label=\"Source code for NebulaOS\">GitHub \u2192</a>\n            </div>\n          </div>\n        </article>\n        <article class=\"project-card\">\n          <div class=\"project-thumb project-thumb-2\">\ud83c\udf0a</div>\n          <div class=\"project-body\">\n            <h3 class=\"project-title\">AquaFlow Design Studio</h3>\n            <p class=\"project-desc\">An interactive design tool for fluid animations, built with WebGL shaders. Users can create and export CSS animations from visual controllers.</p>\n            <div class=\"skill-tags\" style=\"margin-bottom:1rem\">\n              <span class=\"tag\">WebGL</span><span class=\"tag\">GLSL</span><span class=\"tag\">Canvas API</span>\n            </div>\n            <div class=\"project-links\">\n              <a href=\"#\" class=\"project-link\">Live demo \u2192</a>\n              <a href=\"#\" class=\"project-link\">GitHub \u2192</a>\n            </div>\n          </div>\n        </article>\n        <article class=\"project-card\">\n          <div class=\"project-thumb project-thumb-3\">\u2728</div>\n          <div class=\"project-body\">\n            <h3 class=\"project-title\">Luminos Portfolio Engine</h3>\n            <p class=\"project-desc\">An open-source portfolio framework with built-in 3D scene builder, scroll animation system, and design token generator.</p>\n            <div class=\"skill-tags\" style=\"margin-bottom:1rem\">\n              <span class=\"tag\">Next.js</span><span class=\"tag\">R3F</span><span class=\"tag\">GSAP</span>\n            </div>\n            <div class=\"project-links\">\n              <a href=\"#\" class=\"project-link\">Live demo \u2192</a>\n              <a href=\"#\" class=\"project-link\">GitHub \u2192</a>\n            </div>\n          </div>\n        </article>\n      </div>\n    </div>\n  </section>\n\n  <!-- \u2500\u2500 CONTACT \u2500\u2500 -->\n  <section id=\"contact\" aria-labelledby=\"contact-title\">\n    <div class=\"contact-inner\">\n      <p class=\"section-tag\" data-reveal>// Let's work together</p>\n      <h2 id=\"contact-title\" class=\"section-title\" data-reveal>Have a project<br/>in mind?</h2>\n      <p class=\"section-sub\" style=\"margin:0 auto 0;text-align:center\" data-reveal>I'm currently available for freelance projects and full-time opportunities. Let's build something extraordinary.</p>\n      <a href=\"mailto:alex@example.com\" class=\"contact-email\" data-reveal>\n        <span>\ud83d\udcec</span> alex@example.com\n      </a>\n      <div class=\"socials\" data-stagger>\n        <a href=\"#\" class=\"social-link\" aria-label=\"GitHub\">\u2699\ufe0f</a>\n        <a href=\"#\" class=\"social-link\" aria-label=\"LinkedIn\">\ud83d\udcbc</a>\n        <a href=\"#\" class=\"social-link\" aria-label=\"Twitter\">\ud83d\udc26</a>\n        <a href=\"#\" class=\"social-link\" aria-label=\"CodePen\">\u270f\ufe0f</a>\n      </div>\n    </div>\n  </section>\n\n  <footer>\n    <p>\u00a9 2026 Alex Chen. Built with Three.js, GSAP &amp; \ud83d\udda4</p>\n  </footer>\n\n<script type=\"importmap\">\n{\n  \"imports\": {\n    \"three\": \"https://unpkg.com/three@0.171.0/build/three.module.js\"\n  }\n}\n</script>\n<script type=\"module\">\n  import * as THREE from 'three';\n\n  /* \u2500\u2500 Three.js Hero Scene \u2500\u2500 */\n  (function initHeroScene() {\n    const canvas = document.getElementById('hero-canvas');\n    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });\n    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));\n    renderer.setSize(canvas.clientWidth, canvas.clientHeight);\n\n    const scene = new THREE.Scene();\n    const camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 100);\n    camera.position.z = 4;\n\n    // \u2500\u2500 Particle Field \u2500\u2500\n    const particleCount = 2000;\n    const positions = new Float32Array(particleCount * 3);\n    const colors = new Float32Array(particleCount * 3);\n    for (let i = 0; i < particleCount; i++) {\n      positions[i*3]   = (Math.random() - 0.5) * 20;\n      positions[i*3+1] = (Math.random() - 0.5) * 20;\n      positions[i*3+2] = (Math.random() - 0.5) * 20;\n      const t = Math.random();\n      colors[i*3]   = 0.39 + t * 0.2;\n      colors[i*3+1] = 0.40 + (1-t) * 0.1;\n      colors[i*3+2] = 0.95;\n    }\n    const geo = new THREE.BufferGeometry();\n    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));\n    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));\n    const mat = new THREE.PointsMaterial({ size: 0.04, vertexColors: true, transparent: true, opacity: 0.8 });\n    const points = new THREE.Points(geo, mat);\n    scene.add(points);\n\n    // \u2500\u2500 Central Icosahedron \u2500\u2500\n    const icoGeo = new THREE.IcosahedronGeometry(1.2, 1);\n    const icoMat = new THREE.MeshStandardMaterial({\n      color: 0x6366f1, wireframe: true, transparent: true, opacity: 0.35\n    });\n    const ico = new THREE.Mesh(icoGeo, icoMat);\n    scene.add(ico);\n\n    const icoGeo2 = new THREE.IcosahedronGeometry(0.9, 0);\n    const icoMat2 = new THREE.MeshStandardMaterial({\n      color: 0xec4899, transparent: true, opacity: 0.15, roughness: 0, metalness: 0.8\n    });\n    const ico2 = new THREE.Mesh(icoGeo2, icoMat2);\n    scene.add(ico2);\n\n    // Lights\n    scene.add(new THREE.AmbientLight(0xffffff, 0.4));\n    const p1 = new THREE.PointLight(0x6366f1, 3, 15); p1.position.set(3, 3, 3); scene.add(p1);\n    const p2 = new THREE.PointLight(0xec4899, 2, 15); p2.position.set(-3, -2, 2); scene.add(p2);\n\n    // Mouse\n    let mx = 0, my = 0;\n    window.addEventListener('mousemove', e => {\n      mx = (e.clientX / window.innerWidth - 0.5) * 2;\n      my = (e.clientY / window.innerHeight - 0.5) * 2;\n    }, { passive: true });\n\n    // Resize\n    const onResize = () => {\n      const w = canvas.parentElement.clientWidth;\n      const h = canvas.parentElement.clientHeight;\n      renderer.setSize(w, h);\n      camera.aspect = w / h;\n      camera.updateProjectionMatrix();\n    };\n    window.addEventListener('resize', onResize);\n\n    // Animate\n    const clock = new THREE.Clock();\n    function animate() {\n      requestAnimationFrame(animate);\n      const t = clock.getElapsedTime();\n      ico.rotation.x = t * 0.15 + my * 0.1;\n      ico.rotation.y = t * 0.2  + mx * 0.1;\n      ico2.rotation.x = -t * 0.2;\n      ico2.rotation.y = -t * 0.15;\n      points.rotation.y = t * 0.03 + mx * 0.005;\n      points.rotation.x = my * 0.005;\n      p1.position.x = Math.sin(t * 0.5) * 3;\n      p2.position.y = Math.cos(t * 0.4) * 3;\n      renderer.render(scene, camera);\n    }\n    animate();\n  })();\n</script>\n\n<script>\n  /* \u2500\u2500 Scroll Progress \u2500\u2500 */\n  const fill = document.getElementById('scrollFill');\n  window.addEventListener('scroll', () => {\n    const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);\n    fill.style.transform = `scaleX(${pct})`;\n  }, { passive: true });\n\n  /* \u2500\u2500 Intersection Observer for reveal \u2500\u2500 */\n  const observer = new IntersectionObserver((entries) => {\n    entries.forEach(e => {\n      if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }\n    });\n  }, { threshold: 0.15 });\n  document.querySelectorAll('[data-reveal], [data-stagger]').forEach(el => observer.observe(el));\n\n  /* \u2500\u2500 Magnetic buttons \u2500\u2500 */\n  document.querySelectorAll('.btn-primary').forEach(btn => {\n    btn.addEventListener('mousemove', e => {\n      const r = btn.getBoundingClientRect();\n      const x = (e.clientX - r.left - r.width/2) * 0.25;\n      const y = (e.clientY - r.top  - r.height/2) * 0.25;\n      btn.style.transform = `translate(${x}px, ${y}px) translateY(-3px) scale(1.03)`;\n    });\n    btn.addEventListener('mouseleave', () => {\n      btn.style.transform = '';\n    });\n  });\n\n  /* \u2500\u2500 Nav transparency on scroll \u2500\u2500 */\n  const nav = document.querySelector('nav');\n  window.addEventListener('scroll', () => {\n    nav.style.background = window.scrollY > 50\n      ? 'rgba(4,4,13,0.95)'\n      : 'rgba(4,4,13,0.6)';\n  }, { passive: true });\n</script>\n</body>\n</html>\n"}], "grading": {"expectations": [{"text": "Delivers a single self-contained index.html file (no build step required)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes Three.js or CSS 3D animation in the hero section", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has at least 4 distinct sections: hero, about, skills/projects, contact", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses a dark color scheme throughout", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements scroll animations or transitions between sections", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Layout is responsive (uses media queries or fluid units)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "No placeholder TODOs or lorem ipsum text remain", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}]}}, {"id": "portfolio-static-3d-hero-without_skill", "prompt": "Build me a personal portfolio website. I'm a frontend developer. I want something dark, futuristic, with a 3D animated background \u2014 maybe floating particles or a rotating geometric shape. Include sections for hero, about, skills, projects (show 3 placeholder projects), and contact. Keep it to a single HTML file with vanilla JS so I can just open it in a browser.", "eval_id": 0, "outputs": [{"name": "index.html", "type": "text", "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Alex Chen \u2014 Frontend Developer</title>\n  <style>\n    /* \u2500\u2500 Reset & base \u2500\u2500 */\n    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\n\n    :root {\n      --bg:        #080c14;\n      --bg2:       #0d1321;\n      --accent:    #00d4ff;\n      --accent2:   #7b2fff;\n      --text:      #c8d6e5;\n      --text-dim:  #5a7a99;\n      --card-bg:   #0f1a2a;\n      --border:    #1a2d45;\n      --glow:      0 0 20px rgba(0,212,255,0.35);\n      --font:      'Segoe UI', system-ui, sans-serif;\n    }\n\n    html { scroll-behavior: smooth; }\n\n    body {\n      background: var(--bg);\n      color: var(--text);\n      font-family: var(--font);\n      line-height: 1.6;\n      overflow-x: hidden;\n    }\n\n    /* \u2500\u2500 Scrollbar \u2500\u2500 */\n    ::-webkit-scrollbar { width: 6px; }\n    ::-webkit-scrollbar-track { background: var(--bg); }\n    ::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 3px; }\n\n    /* \u2500\u2500 Canvas background \u2500\u2500 */\n    #bg-canvas {\n      position: fixed;\n      inset: 0;\n      z-index: 0;\n      pointer-events: none;\n    }\n\n    /* \u2500\u2500 Nav \u2500\u2500 */\n    nav {\n      position: fixed;\n      top: 0; left: 0; right: 0;\n      z-index: 100;\n      display: flex;\n      align-items: center;\n      justify-content: space-between;\n      padding: 1rem 3rem;\n      background: rgba(8,12,20,0.75);\n      backdrop-filter: blur(12px);\n      border-bottom: 1px solid var(--border);\n    }\n\n    .nav-logo {\n      font-size: 1.25rem;\n      font-weight: 700;\n      letter-spacing: 2px;\n      color: var(--accent);\n      text-shadow: var(--glow);\n      text-decoration: none;\n    }\n\n    .nav-links { display: flex; gap: 2rem; list-style: none; }\n\n    .nav-links a {\n      color: var(--text-dim);\n      text-decoration: none;\n      font-size: 0.875rem;\n      letter-spacing: 1px;\n      text-transform: uppercase;\n      transition: color 0.25s;\n    }\n\n    .nav-links a:hover { color: var(--accent); }\n\n    /* \u2500\u2500 Sections shared \u2500\u2500 */\n    section {\n      position: relative;\n      z-index: 1;\n      width: 100%;\n      max-width: 1100px;\n      margin: 0 auto;\n      padding: 6rem 2rem;\n    }\n\n    .section-label {\n      font-size: 0.75rem;\n      letter-spacing: 4px;\n      text-transform: uppercase;\n      color: var(--accent);\n      margin-bottom: 0.5rem;\n    }\n\n    h2.section-title {\n      font-size: clamp(1.75rem, 4vw, 2.5rem);\n      font-weight: 700;\n      color: #e8f4ff;\n      margin-bottom: 3rem;\n      position: relative;\n    }\n\n    h2.section-title::after {\n      content: '';\n      display: block;\n      width: 48px;\n      height: 3px;\n      background: linear-gradient(90deg, var(--accent), var(--accent2));\n      margin-top: 0.6rem;\n      border-radius: 2px;\n    }\n\n    /* \u2500\u2500 Hero \u2500\u2500 */\n    #hero {\n      min-height: 100vh;\n      display: flex;\n      flex-direction: column;\n      justify-content: center;\n      max-width: 100%;\n      padding: 0 10vw;\n    }\n\n    .hero-eyebrow {\n      font-size: 0.8rem;\n      letter-spacing: 5px;\n      text-transform: uppercase;\n      color: var(--accent);\n      margin-bottom: 1.2rem;\n      opacity: 0;\n      animation: fadeUp 0.7s 0.3s forwards;\n    }\n\n    .hero-name {\n      font-size: clamp(3rem, 8vw, 6.5rem);\n      font-weight: 800;\n      line-height: 1.05;\n      letter-spacing: -1px;\n      color: #eaf4ff;\n      opacity: 0;\n      animation: fadeUp 0.7s 0.5s forwards;\n    }\n\n    .hero-name span {\n      background: linear-gradient(135deg, var(--accent), var(--accent2));\n      -webkit-background-clip: text;\n      -webkit-text-fill-color: transparent;\n      background-clip: text;\n    }\n\n    .hero-tagline {\n      margin-top: 1.25rem;\n      font-size: clamp(1rem, 2.5vw, 1.35rem);\n      color: var(--text-dim);\n      max-width: 520px;\n      opacity: 0;\n      animation: fadeUp 0.7s 0.7s forwards;\n    }\n\n    .hero-cta {\n      margin-top: 2.5rem;\n      display: flex;\n      gap: 1rem;\n      flex-wrap: wrap;\n      opacity: 0;\n      animation: fadeUp 0.7s 0.9s forwards;\n    }\n\n    .btn {\n      display: inline-block;\n      padding: 0.75rem 2rem;\n      border-radius: 4px;\n      font-size: 0.9rem;\n      font-weight: 600;\n      letter-spacing: 1px;\n      text-decoration: none;\n      cursor: pointer;\n      transition: transform 0.2s, box-shadow 0.2s;\n      border: none;\n    }\n\n    .btn-primary {\n      background: linear-gradient(135deg, var(--accent), var(--accent2));\n      color: #fff;\n      box-shadow: 0 0 24px rgba(0,212,255,0.3);\n    }\n\n    .btn-primary:hover {\n      transform: translateY(-2px);\n      box-shadow: 0 0 36px rgba(0,212,255,0.5);\n    }\n\n    .btn-outline {\n      background: transparent;\n      color: var(--accent);\n      border: 1px solid var(--accent);\n    }\n\n    .btn-outline:hover {\n      background: rgba(0,212,255,0.08);\n      transform: translateY(-2px);\n    }\n\n    /* \u2500\u2500 Scroll indicator \u2500\u2500 */\n    .scroll-hint {\n      position: absolute;\n      bottom: 2.5rem;\n      left: 50%;\n      transform: translateX(-50%);\n      display: flex;\n      flex-direction: column;\n      align-items: center;\n      gap: 0.4rem;\n      color: var(--text-dim);\n      font-size: 0.7rem;\n      letter-spacing: 3px;\n      text-transform: uppercase;\n      z-index: 1;\n      opacity: 0;\n      animation: fadeUp 0.7s 1.3s forwards;\n    }\n\n    .scroll-hint .mouse {\n      width: 22px; height: 36px;\n      border: 2px solid var(--text-dim);\n      border-radius: 12px;\n      position: relative;\n    }\n\n    .scroll-hint .mouse::after {\n      content: '';\n      position: absolute;\n      top: 6px; left: 50%; transform: translateX(-50%);\n      width: 3px; height: 7px;\n      background: var(--accent);\n      border-radius: 2px;\n      animation: scrollDown 1.6s infinite;\n    }\n\n    @keyframes scrollDown {\n      0%   { opacity: 1; top: 6px; }\n      100% { opacity: 0; top: 18px; }\n    }\n\n    /* \u2500\u2500 About \u2500\u2500 */\n    .about-grid {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 4rem;\n      align-items: center;\n    }\n\n    .about-avatar {\n      position: relative;\n      width: 280px;\n      height: 280px;\n      margin: 0 auto;\n    }\n\n    .about-avatar .ring {\n      position: absolute;\n      inset: -8px;\n      border-radius: 50%;\n      border: 2px solid transparent;\n      background: linear-gradient(135deg, var(--accent), var(--accent2)) border-box;\n      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);\n      -webkit-mask-composite: destination-out;\n      mask-composite: exclude;\n      animation: rotateBorder 8s linear infinite;\n    }\n\n    @keyframes rotateBorder {\n      to { transform: rotate(360deg); }\n    }\n\n    .about-avatar .initials {\n      width: 280px; height: 280px;\n      border-radius: 50%;\n      background: linear-gradient(135deg, #0d1f35, #1a0d35);\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      font-size: 5rem;\n      font-weight: 800;\n      color: var(--accent);\n      text-shadow: var(--glow);\n      user-select: none;\n    }\n\n    .about-text p {\n      color: var(--text);\n      margin-bottom: 1rem;\n      font-size: 1.05rem;\n    }\n\n    .about-stats {\n      display: flex;\n      gap: 2.5rem;\n      margin-top: 2rem;\n    }\n\n    .stat-num {\n      font-size: 2.2rem;\n      font-weight: 800;\n      color: var(--accent);\n      text-shadow: var(--glow);\n      line-height: 1;\n    }\n\n    .stat-label {\n      font-size: 0.75rem;\n      color: var(--text-dim);\n      letter-spacing: 1px;\n    }\n\n    /* \u2500\u2500 Skills \u2500\u2500 */\n    .skills-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));\n      gap: 1.25rem;\n    }\n\n    .skill-card {\n      background: var(--card-bg);\n      border: 1px solid var(--border);\n      border-radius: 8px;\n      padding: 1.5rem;\n      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;\n    }\n\n    .skill-card:hover {\n      border-color: var(--accent);\n      transform: translateY(-4px);\n      box-shadow: var(--glow);\n    }\n\n    .skill-icon {\n      font-size: 2rem;\n      margin-bottom: 0.75rem;\n    }\n\n    .skill-name {\n      font-weight: 700;\n      font-size: 0.95rem;\n      color: #e0eeff;\n      margin-bottom: 0.5rem;\n    }\n\n    .skill-bar-bg {\n      height: 4px;\n      background: var(--border);\n      border-radius: 2px;\n      overflow: hidden;\n    }\n\n    .skill-bar {\n      height: 100%;\n      border-radius: 2px;\n      background: linear-gradient(90deg, var(--accent), var(--accent2));\n      width: 0;\n      transition: width 1.2s cubic-bezier(0.23, 1, 0.32, 1);\n    }\n\n    /* \u2500\u2500 Projects \u2500\u2500 */\n    .projects-grid {\n      display: grid;\n      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));\n      gap: 1.5rem;\n    }\n\n    .project-card {\n      background: var(--card-bg);\n      border: 1px solid var(--border);\n      border-radius: 10px;\n      overflow: hidden;\n      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;\n    }\n\n    .project-card:hover {\n      transform: translateY(-6px);\n      box-shadow: 0 0 40px rgba(0,212,255,0.15);\n      border-color: var(--accent);\n    }\n\n    .project-thumb {\n      width: 100%;\n      height: 180px;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      font-size: 3.5rem;\n      position: relative;\n      overflow: hidden;\n    }\n\n    .project-thumb::before {\n      content: '';\n      position: absolute;\n      inset: 0;\n      opacity: 0.15;\n    }\n\n    .proj-1 .project-thumb { background: linear-gradient(135deg, #001a2e, #003355); }\n    .proj-2 .project-thumb { background: linear-gradient(135deg, #1a001a, #330033); }\n    .proj-3 .project-thumb { background: linear-gradient(135deg, #001a0d, #003322); }\n\n    .project-body { padding: 1.5rem; }\n\n    .project-tags {\n      display: flex;\n      flex-wrap: wrap;\n      gap: 0.5rem;\n      margin-bottom: 0.85rem;\n    }\n\n    .tag {\n      font-size: 0.68rem;\n      letter-spacing: 1px;\n      text-transform: uppercase;\n      color: var(--accent);\n      background: rgba(0,212,255,0.08);\n      border: 1px solid rgba(0,212,255,0.2);\n      padding: 0.2rem 0.6rem;\n      border-radius: 3px;\n    }\n\n    .project-title {\n      font-size: 1.15rem;\n      font-weight: 700;\n      color: #e0eeff;\n      margin-bottom: 0.6rem;\n    }\n\n    .project-desc {\n      font-size: 0.88rem;\n      color: var(--text-dim);\n      margin-bottom: 1.25rem;\n      line-height: 1.7;\n    }\n\n    .project-links { display: flex; gap: 1rem; }\n\n    .project-links a {\n      font-size: 0.8rem;\n      color: var(--accent);\n      text-decoration: none;\n      letter-spacing: 0.5px;\n      display: flex;\n      align-items: center;\n      gap: 0.3rem;\n      transition: opacity 0.2s;\n    }\n\n    .project-links a:hover { opacity: 0.7; }\n\n    /* \u2500\u2500 Contact \u2500\u2500 */\n    .contact-wrapper {\n      display: grid;\n      grid-template-columns: 1fr 1fr;\n      gap: 4rem;\n      align-items: start;\n    }\n\n    .contact-info p {\n      color: var(--text-dim);\n      font-size: 1rem;\n      margin-bottom: 2rem;\n      line-height: 1.8;\n    }\n\n    .contact-links { display: flex; flex-direction: column; gap: 1rem; }\n\n    .contact-link {\n      display: flex;\n      align-items: center;\n      gap: 0.75rem;\n      color: var(--text);\n      text-decoration: none;\n      font-size: 0.95rem;\n      transition: color 0.25s;\n    }\n\n    .contact-link:hover { color: var(--accent); }\n\n    .contact-link-icon {\n      width: 36px; height: 36px;\n      border-radius: 6px;\n      background: rgba(0,212,255,0.08);\n      border: 1px solid var(--border);\n      display: flex; align-items: center; justify-content: center;\n      font-size: 1rem;\n    }\n\n    form { display: flex; flex-direction: column; gap: 1.1rem; }\n\n    form input, form textarea {\n      background: var(--card-bg);\n      border: 1px solid var(--border);\n      border-radius: 6px;\n      padding: 0.85rem 1rem;\n      color: var(--text);\n      font-family: var(--font);\n      font-size: 0.95rem;\n      outline: none;\n      transition: border-color 0.25s, box-shadow 0.25s;\n    }\n\n    form input::placeholder, form textarea::placeholder { color: var(--text-dim); }\n\n    form input:focus, form textarea:focus {\n      border-color: var(--accent);\n      box-shadow: 0 0 0 3px rgba(0,212,255,0.1);\n    }\n\n    form textarea { resize: vertical; min-height: 130px; }\n\n    form button {\n      align-self: flex-start;\n    }\n\n    /* \u2500\u2500 Footer \u2500\u2500 */\n    footer {\n      position: relative;\n      z-index: 1;\n      text-align: center;\n      padding: 2rem;\n      color: var(--text-dim);\n      font-size: 0.8rem;\n      border-top: 1px solid var(--border);\n      letter-spacing: 1px;\n    }\n\n    footer span { color: var(--accent); }\n\n    /* \u2500\u2500 Animations \u2500\u2500 */\n    @keyframes fadeUp {\n      from { opacity: 0; transform: translateY(24px); }\n      to   { opacity: 1; transform: translateY(0); }\n    }\n\n    .reveal {\n      opacity: 0;\n      transform: translateY(30px);\n      transition: opacity 0.7s ease, transform 0.7s ease;\n    }\n\n    .reveal.visible {\n      opacity: 1;\n      transform: none;\n    }\n\n    /* \u2500\u2500 Responsive \u2500\u2500 */\n    @media (max-width: 768px) {\n      nav { padding: 1rem 1.5rem; }\n      .nav-links { display: none; }\n\n      #hero { padding: 0 1.5rem; }\n\n      .about-grid,\n      .contact-wrapper { grid-template-columns: 1fr; }\n\n      .about-avatar { width: 200px; height: 200px; }\n      .about-avatar .initials { width: 200px; height: 200px; font-size: 3.5rem; }\n\n      .projects-grid { grid-template-columns: 1fr; }\n    }\n  </style>\n</head>\n<body>\n\n<!-- 3D animated background canvas -->\n<canvas id=\"bg-canvas\"></canvas>\n\n<!-- Navigation -->\n<nav>\n  <a href=\"#hero\" class=\"nav-logo\">AC</a>\n  <ul class=\"nav-links\">\n    <li><a href=\"#about\">About</a></li>\n    <li><a href=\"#skills\">Skills</a></li>\n    <li><a href=\"#projects\">Projects</a></li>\n    <li><a href=\"#contact\">Contact</a></li>\n  </ul>\n</nav>\n\n<!-- Hero -->\n<section id=\"hero\">\n  <p class=\"hero-eyebrow\">Frontend Developer</p>\n  <h1 class=\"hero-name\">Alex<br><span>Chen.</span></h1>\n  <p class=\"hero-tagline\">\n    I craft immersive digital experiences \u2014 from pixel-perfect interfaces\n    to real-time 3D environments on the web.\n  </p>\n  <div class=\"hero-cta\">\n    <a href=\"#projects\" class=\"btn btn-primary\">View My Work</a>\n    <a href=\"#contact\" class=\"btn btn-outline\">Get In Touch</a>\n  </div>\n  <div class=\"scroll-hint\">\n    <div class=\"mouse\"></div>\n    <span>Scroll</span>\n  </div>\n</section>\n\n<!-- About -->\n<section id=\"about\">\n  <p class=\"section-label reveal\">Who I Am</p>\n  <h2 class=\"section-title reveal\">About Me</h2>\n  <div class=\"about-grid\">\n    <div class=\"about-avatar reveal\">\n      <div class=\"ring\"></div>\n      <div class=\"initials\">AC</div>\n    </div>\n    <div class=\"about-text reveal\">\n      <p>\n        I'm a frontend developer with a passion for building high-performance,\n        visually stunning web applications. I live at the intersection of design\n        and engineering \u2014 where aesthetics meet precision.\n      </p>\n      <p>\n        With 5+ years of experience, I've shipped everything from fast-loading\n        marketing sites to complex data-heavy SPAs. I specialise in React,\n        WebGL, and creative animations that keep users engaged.\n      </p>\n      <p>\n        When I'm not pushing pixels, you'll find me experimenting with shaders,\n        contributing to open-source, or losing sleep over smooth scroll curves.\n      </p>\n      <div class=\"about-stats\">\n        <div>\n          <div class=\"stat-num\">5+</div>\n          <div class=\"stat-label\">Years exp.</div>\n        </div>\n        <div>\n          <div class=\"stat-num\">40+</div>\n          <div class=\"stat-label\">Projects</div>\n        </div>\n        <div>\n          <div class=\"stat-num\">18</div>\n          <div class=\"stat-label\">Happy clients</div>\n        </div>\n      </div>\n    </div>\n  </div>\n</section>\n\n<!-- Skills -->\n<section id=\"skills\">\n  <p class=\"section-label reveal\">What I Know</p>\n  <h2 class=\"section-title reveal\">Skills &amp; Tools</h2>\n  <div class=\"skills-grid\">\n    <!-- cards filled by JS -->\n  </div>\n</section>\n\n<!-- Projects -->\n<section id=\"projects\">\n  <p class=\"section-label reveal\">What I've Built</p>\n  <h2 class=\"section-title reveal\">Featured Projects</h2>\n  <div class=\"projects-grid\">\n\n    <div class=\"project-card proj-1 reveal\">\n      <div class=\"project-thumb\">\ud83c\udf10</div>\n      <div class=\"project-body\">\n        <div class=\"project-tags\">\n          <span class=\"tag\">React</span>\n          <span class=\"tag\">Three.js</span>\n          <span class=\"tag\">GLSL</span>\n        </div>\n        <h3 class=\"project-title\">NovaSphere Dashboard</h3>\n        <p class=\"project-desc\">\n          A real-time analytics platform with a 3D globe visualisation\n          showing live network traffic. Custom WebGL shaders power the\n          glow and particle effects.\n        </p>\n        <div class=\"project-links\">\n          <a href=\"#\">&#9654; Live Demo</a>\n          <a href=\"#\">&#60;/&#62; Source</a>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"project-card proj-2 reveal\">\n      <div class=\"project-thumb\">\ud83c\udfae</div>\n      <div class=\"project-body\">\n        <div class=\"project-tags\">\n          <span class=\"tag\">TypeScript</span>\n          <span class=\"tag\">Canvas API</span>\n          <span class=\"tag\">Zustand</span>\n        </div>\n        <h3 class=\"project-title\">Pixel Dungeon Web</h3>\n        <p class=\"project-desc\">\n          A browser-based roguelike engine with procedural level generation,\n          60 fps tile rendering via the Canvas 2D API, and full keyboard /\n          gamepad support.\n        </p>\n        <div class=\"project-links\">\n          <a href=\"#\">&#9654; Live Demo</a>\n          <a href=\"#\">&#60;/&#62; Source</a>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"project-card proj-3 reveal\">\n      <div class=\"project-thumb\">\ud83d\udcca</div>\n      <div class=\"project-body\">\n        <div class=\"project-tags\">\n          <span class=\"tag\">Next.js</span>\n          <span class=\"tag\">D3.js</span>\n          <span class=\"tag\">Tailwind</span>\n        </div>\n        <h3 class=\"project-title\">QuantumMetrics</h3>\n        <p class=\"project-desc\">\n          A SaaS reporting tool with animated SVG charts, real-time\n          WebSocket feeds, and a drag-and-drop dashboard builder \u2014 all\n          built for speed and accessibility.\n        </p>\n        <div class=\"project-links\">\n          <a href=\"#\">&#9654; Live Demo</a>\n          <a href=\"#\">&#60;/&#62; Source</a>\n        </div>\n      </div>\n    </div>\n\n  </div>\n</section>\n\n<!-- Contact -->\n<section id=\"contact\">\n  <p class=\"section-label reveal\">Let's Talk</p>\n  <h2 class=\"section-title reveal\">Contact</h2>\n  <div class=\"contact-wrapper\">\n    <div class=\"contact-info reveal\">\n      <p>\n        Available for freelance projects, full-time roles, and interesting\n        collaborations. If you have an idea or an opportunity, I'd love to\n        hear about it.\n      </p>\n      <div class=\"contact-links\">\n        <a href=\"mailto:alex@example.com\" class=\"contact-link\">\n          <span class=\"contact-link-icon\">\u2709</span>\n          alex@example.com\n        </a>\n        <a href=\"#\" class=\"contact-link\">\n          <span class=\"contact-link-icon\">in</span>\n          linkedin.com/in/alexchen\n        </a>\n        <a href=\"#\" class=\"contact-link\">\n          <span class=\"contact-link-icon\">gh</span>\n          github.com/alexchen\n        </a>\n      </div>\n    </div>\n    <form class=\"reveal\" onsubmit=\"handleSubmit(event)\">\n      <input type=\"text\"  name=\"name\"    placeholder=\"Your Name\"    required />\n      <input type=\"email\" name=\"email\"   placeholder=\"Your Email\"   required />\n      <input type=\"text\"  name=\"subject\" placeholder=\"Subject\"      />\n      <textarea           name=\"message\" placeholder=\"Your message\u2026\" required></textarea>\n      <button type=\"submit\" class=\"btn btn-primary\">Send Message</button>\n    </form>\n  </div>\n</section>\n\n<footer>\n  <p>Designed &amp; built by <span>Alex Chen</span> &mdash; 2025</p>\n</footer>\n\n<script>\n/* =========================================================\n   3D Canvas Background \u2014 rotating icosahedron + particles\n   ========================================================= */\n(function () {\n  const canvas = document.getElementById('bg-canvas');\n  const ctx    = canvas.getContext('2d');\n\n  let W, H, cx, cy;\n\n  function resize () {\n    W = canvas.width  = window.innerWidth;\n    H = canvas.height = window.innerHeight;\n    cx = W / 2; cy = H / 2;\n  }\n  window.addEventListener('resize', resize);\n  resize();\n\n  /* ---- Icosahedron geometry ---- */\n  const \u03c6 = (1 + Math.sqrt(5)) / 2;\n  const RAW_VERTS = [\n    [-1,  \u03c6,  0],[1,  \u03c6,  0],[-1, -\u03c6,  0],[ 1, -\u03c6,  0],\n    [ 0, -1,  \u03c6],[0,  1,  \u03c6],[ 0, -1, -\u03c6],[ 0,  1, -\u03c6],\n    [ \u03c6,  0, -1],[\u03c6,  0,  1],[-\u03c6,  0, -1],[-\u03c6,  0,  1]\n  ];\n  const FACES = [\n    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],\n    [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],\n    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],\n    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]\n  ];\n\n  function normalize(v) {\n    const m = Math.hypot(...v);\n    return v.map(x => x / m);\n  }\n\n  const VERTS = RAW_VERTS.map(normalize);\n\n  /* ---- Particles ---- */\n  const PARTICLE_COUNT = 140;\n  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({\n    x:  Math.random() * 1800 - 400,\n    y:  Math.random() * 1000 - 100,\n    z:  Math.random() * 1400 - 700,\n    r:  Math.random() * 1.5 + 0.4,\n    vx: (Math.random() - 0.5) * 0.2,\n    vy: (Math.random() - 0.5) * 0.1,\n    vz: (Math.random() - 0.5) * 0.15,\n  }));\n\n  /* ---- Rotation state ---- */\n  let rotX = 0, rotY = 0;\n  const autoSpeedX = 0.0028, autoSpeedY = 0.0045;\n\n  /* mouse-drag interaction */\n  let drag = false, lastMX = 0, lastMY = 0;\n  canvas.addEventListener('mousedown', e => { drag = true; lastMX = e.clientX; lastMY = e.clientY; });\n  window.addEventListener('mouseup',   () => { drag = false; });\n  window.addEventListener('mousemove', e => {\n    if (!drag) return;\n    rotY += (e.clientX - lastMX) * 0.005;\n    rotX += (e.clientY - lastMY) * 0.005;\n    lastMX = e.clientX; lastMY = e.clientY;\n  });\n\n  /* ---- Math helpers ---- */\n  function rotateXY([x, y, z], ax, ay) {\n    // rotate around Y\n    let x1 = x * Math.cos(ay) + z * Math.sin(ay);\n    let z1 = -x * Math.sin(ay) + z * Math.cos(ay);\n    // rotate around X\n    let y2 = y * Math.cos(ax) - z1 * Math.sin(ax);\n    let z2 = y * Math.sin(ax) + z1 * Math.cos(ax);\n    return [x1, y2, z2];\n  }\n\n  function project([x, y, z], fov = 900, scale = 260) {\n    const pz  = z + fov;\n    const f   = fov / pz;\n    return [cx + x * scale * f, cy + y * scale * f, pz];\n  }\n\n  /* ---- Main draw loop ---- */\n  function draw (ts) {\n    rotX += autoSpeedX;\n    rotY += autoSpeedY;\n\n    ctx.clearRect(0, 0, W, H);\n\n    /* background gradient */\n    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.7);\n    grad.addColorStop(0,   'rgba(13,26,48,0.92)');\n    grad.addColorStop(0.6, 'rgba(8,12,20,0.96)');\n    grad.addColorStop(1,   'rgba(4,6,12,1)');\n    ctx.fillStyle = grad;\n    ctx.fillRect(0, 0, W, H);\n\n    /* ---- particles ---- */\n    for (const p of particles) {\n      p.x += p.vx; p.y += p.vy; p.z += p.vz;\n      if (p.x >  W + 400) p.x = -400;\n      if (p.x < -400)     p.x =  W + 400;\n      if (p.y >  H + 100) p.y = -100;\n      if (p.y < -100)     p.y =  H + 100;\n      if (p.z >  700)     p.z = -700;\n      if (p.z < -700)     p.z =  700;\n\n      const [px, py, pz] = project([p.x - cx, p.y - cy, p.z], 900, 1);\n      const alpha = Math.min(1, Math.max(0, (pz - 200) / 800));\n      const size  = p.r * (900 / pz);\n\n      ctx.beginPath();\n      ctx.arc(px + cx - cx, py + cy - cy, size, 0, Math.PI * 2);\n\n      // subtle color variation\n      const hue = 180 + (p.x / W) * 80;\n      ctx.fillStyle = `hsla(${hue}, 80%, 70%, ${alpha * 0.7})`;\n      ctx.fill();\n    }\n\n    /* ---- icosahedron ---- */\n    const rotVerts = VERTS.map(v => rotateXY(v, rotX, rotY));\n    const projected = rotVerts.map(v => project(v));\n\n    /* sort faces back-to-front */\n    const sortedFaces = FACES.map(f => {\n      const avgZ = (projected[f[0]][2] + projected[f[1]][2] + projected[f[2]][2]) / 3;\n      return { f, avgZ };\n    }).sort((a, b) => b.avgZ - a.avgZ);\n\n    for (const { f } of sortedFaces) {\n      const [ax, ay] = projected[f[0]];\n      const [bx, by] = projected[f[1]];\n      const [cx2, cy2] = projected[f[2]];\n\n      /* face fill \u2014 very subtle */\n      ctx.beginPath();\n      ctx.moveTo(ax, ay);\n      ctx.lineTo(bx, by);\n      ctx.lineTo(cx2, cy2);\n      ctx.closePath();\n\n      const faceGrad = ctx.createLinearGradient(ax, ay, cx2, cy2);\n      faceGrad.addColorStop(0, 'rgba(0,212,255,0.04)');\n      faceGrad.addColorStop(1, 'rgba(123,47,255,0.04)');\n      ctx.fillStyle = faceGrad;\n      ctx.fill();\n\n      /* edges */\n      ctx.strokeStyle = 'rgba(0,212,255,0.35)';\n      ctx.lineWidth   = 0.8;\n      ctx.stroke();\n    }\n\n    /* vertex dots */\n    for (const [vx, vy] of projected) {\n      ctx.beginPath();\n      ctx.arc(vx, vy, 2.5, 0, Math.PI * 2);\n      ctx.fillStyle = 'rgba(0,212,255,0.8)';\n      ctx.fill();\n    }\n\n    /* connection lines to nearby particles */\n    for (const p of particles) {\n      const [px, py, pz] = project([p.x - cx, p.y - cy, p.z], 900, 1);\n      for (const [vx, vy] of projected) {\n        const dx = px - vx + (cx - cx), dy = py - vy + (cy - cy);\n        const dist = Math.hypot(dx, dy);\n        if (dist < 80) {\n          const alpha = (1 - dist / 80) * 0.25;\n          ctx.beginPath();\n          ctx.moveTo(px, py);\n          ctx.lineTo(vx, vy);\n          ctx.strokeStyle = `rgba(0,212,255,${alpha})`;\n          ctx.lineWidth   = 0.4;\n          ctx.stroke();\n        }\n      }\n    }\n\n    requestAnimationFrame(draw);\n  }\n\n  requestAnimationFrame(draw);\n})();\n\n\n/* =========================================================\n   Skill cards\n   ========================================================= */\n(function () {\n  const skills = [\n    { icon: '\u269b', name: 'React / Next.js',    level: 95 },\n    { icon: '\ud83d\udfe8', name: 'JavaScript / TS',   level: 92 },\n    { icon: '\ud83c\udfa8', name: 'CSS / Animation',    level: 90 },\n    { icon: '\ud83c\udf10', name: 'WebGL / Three.js',   level: 78 },\n    { icon: '\ud83d\uddbc', name: 'Canvas / SVG',        level: 82 },\n    { icon: '\ud83d\udce6', name: 'Webpack / Vite',      level: 80 },\n    { icon: '\ud83e\uddea', name: 'Testing (Jest/RTL)',  level: 74 },\n    { icon: '\ud83d\ude80', name: 'Performance / Core Web Vitals', level: 85 },\n  ];\n\n  const grid = document.querySelector('.skills-grid');\n\n  skills.forEach((s, i) => {\n    const card = document.createElement('div');\n    card.className = 'skill-card reveal';\n    card.style.transitionDelay = `${i * 60}ms`;\n    card.innerHTML = `\n      <div class=\"skill-icon\">${s.icon}</div>\n      <div class=\"skill-name\">${s.name}</div>\n      <div class=\"skill-bar-bg\">\n        <div class=\"skill-bar\" data-level=\"${s.level}\"></div>\n      </div>\n    `;\n    grid.appendChild(card);\n  });\n})();\n\n\n/* =========================================================\n   Scroll reveal + skill bars\n   ========================================================= */\n(function () {\n  const io = new IntersectionObserver((entries) => {\n    entries.forEach(e => {\n      if (!e.isIntersecting) return;\n      e.target.classList.add('visible');\n\n      /* animate skill bars once visible */\n      const bar = e.target.querySelector('.skill-bar');\n      if (bar) {\n        const lvl = bar.dataset.level;\n        requestAnimationFrame(() => { bar.style.width = lvl + '%'; });\n      }\n\n      io.unobserve(e.target);\n    });\n  }, { threshold: 0.15 });\n\n  /* observe all current + future .reveal elements */\n  function observeAll () {\n    document.querySelectorAll('.reveal:not(.observed)').forEach(el => {\n      el.classList.add('observed');\n      io.observe(el);\n    });\n  }\n\n  observeAll();\n\n  /* re-run after skill cards are injected */\n  const mut = new MutationObserver(observeAll);\n  mut.observe(document.body, { childList: true, subtree: true });\n})();\n\n\n/* =========================================================\n   Contact form\n   ========================================================= */\nfunction handleSubmit(e) {\n  e.preventDefault();\n  const btn = e.target.querySelector('button');\n  btn.textContent = 'Sending\u2026';\n  btn.disabled = true;\n\n  setTimeout(() => {\n    btn.textContent = 'Message Sent \u2713';\n    btn.style.background = 'linear-gradient(135deg,#00c896,#00a07a)';\n    e.target.reset();\n  }, 1200);\n}\n</script>\n</body>\n</html>\n"}], "grading": {"expectations": [{"text": "Delivers a single self-contained index.html file (no build step required)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes Three.js or CSS 3D animation in the hero section", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has at least 4 distinct sections: hero, about, skills/projects, contact", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses a dark color scheme throughout", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements scroll animations or transitions between sections", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Layout is responsive (uses media queries or fluid units)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "No placeholder TODOs or lorem ipsum text remain", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}]}}, {"id": "saas-landing-glassmorphism-with_skill", "prompt": "I'm launching a SaaS product called 'Luminary' \u2014 an AI-powered analytics dashboard. Create a landing page with React + Vite. I want: glassmorphism cards, an aurora gradient animated background, a pricing section with 3 tiers, a features section with animated icons, and a hero with a 3D sphere using Three.js. Dark color scheme, purple/blue accent.", "eval_id": 1, "outputs": [{"name": "README.md", "type": "text", "content": "# Luminary \u2014 AI Analytics Dashboard Landing Page\n\nA high-fidelity SaaS landing page built with React + Vite featuring:\n\n- Glassmorphism card system\n- Aurora gradient animated background\n- Three.js 3D animated sphere with particle rings (hero section)\n- Pricing section with 3 tiers and monthly/annual toggle\n- Features section with 6 animated icon cards (3D tilt effect)\n- Responsive navbar with scroll progress bar\n- Fluid typography with CSS `clamp()`\n- `prefers-reduced-motion` support\n- Full WCAG 2.1 AA accessibility (focus rings, aria-labels, semantic HTML)\n\n## Tech Stack\n\n- **React 19** + **Vite 6**\n- **Three.js 0.171** \u2014 3D sphere, particle field, torus rings\n- **GSAP 3.12** (available for additional animations)\n- **Syne** + **Plus Jakarta Sans** (Google Fonts)\n- Pure CSS \u2014 no Tailwind, no additional CSS frameworks\n\n## Quick Start\n\n```bash\n# 1. Install dependencies\nnpm install\n\n# 2. Start development server\nnpm run dev\n```\n\nOpen http://localhost:5173 in your browser.\n\n## Build for Production\n\n```bash\nnpm run build\nnpm run preview   # preview production build locally\n```\n\n## Project Structure\n\n```\n\u251c\u2500\u2500 index.html                  # Entry HTML, Google Fonts\n\u251c\u2500\u2500 vite.config.js              # Vite + React plugin\n\u251c\u2500\u2500 package.json\n\u2514\u2500\u2500 src/\n    \u251c\u2500\u2500 main.jsx                # React root\n    \u251c\u2500\u2500 App.jsx                 # Layout: Navbar \u2192 Hero \u2192 Features \u2192 Pricing \u2192 Footer\n    \u251c\u2500\u2500 index.css               # Design tokens, aurora animation, glassmorphism, utilities\n    \u251c\u2500\u2500 components/\n    \u2502   \u251c\u2500\u2500 Navbar.jsx          # Fixed navbar with scroll detection, mobile menu\n    \u2502   \u251c\u2500\u2500 Hero.jsx            # Hero with Three.js sphere + aurora background\n    \u2502   \u251c\u2500\u2500 Features.jsx        # 6-card feature grid with 3D tilt + icon animation\n    \u2502   \u251c\u2500\u2500 Pricing.jsx         # 3-tier pricing with monthly/annual toggle\n    \u2502   \u2514\u2500\u2500 Footer.jsx          # Multi-column footer with newsletter + social links\n    \u2514\u2500\u2500 lib/\n        \u2514\u2500\u2500 hero-scene.js       # Three.js scene: sphere, wireframe, particles, rings\n```\n\n## Customisation\n\n### 1. Brand colors\nEdit CSS custom properties in `src/index.css`:\n```css\n--color-bg:      #0f0a1e;   /* page background */\n--color-primary: #6366f1;   /* indigo accent */\n--color-accent:  #8b5cf6;   /* violet accent */\n```\n\n### 2. Product name and copy\n- Hero headline and stats: `src/components/Hero.jsx`\n- Features: edit the `FEATURES` array in `src/components/Features.jsx`\n- Pricing tiers: edit the `TIERS` array in `src/components/Pricing.jsx`\n\n### 3. Navigation links\nEdit `NAV_LINKS` in `src/components/Navbar.jsx`.\n\n### 4. Three.js sphere appearance\n`src/lib/hero-scene.js` \u2014 adjust sphere geometry, particle count, light colors, or rotation speeds.\n\n### 5. Fonts\nReplace the Google Fonts `<link>` in `index.html` and update `--font-display` / `--font-body` in `index.css`.\n\n## Deployment\n\nThe built output is a static site (`dist/`). Deploy to any static host:\n\n```bash\n# Vercel\nnpx vercel --prod\n\n# Netlify\nnpx netlify deploy --prod --dir dist\n\n# GitHub Pages\nnpm run build && gh-pages -d dist\n```\n"}, {"name": "index.html", "type": "text", "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta name=\"description\" content=\"Luminary \u2014 AI-powered analytics dashboard. Transform your data into actionable insights with beautiful, real-time visualizations.\" />\n    <title>Luminary \u2014 AI Analytics Dashboard</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n    <link\n      href=\"https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap\"\n      rel=\"stylesheet\"\n    />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"}, {"name": "package.json", "type": "text", "content": "{\n  \"name\": \"luminary-landing\",\n  \"private\": true,\n  \"version\": \"1.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\",\n    \"preview\": \"vite preview\"\n  },\n  \"dependencies\": {\n    \"gsap\": \"^3.12.5\",\n    \"react\": \"^19.0.0\",\n    \"react-dom\": \"^19.0.0\",\n    \"three\": \"^0.171.0\"\n  },\n  \"devDependencies\": {\n    \"@vitejs/plugin-react\": \"^4.3.0\",\n    \"vite\": \"^6.0.0\"\n  }\n}\n"}, {"name": "vite.config.js", "type": "text", "content": "import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\n\nexport default defineConfig({\n  plugins: [react()],\n  optimizeDeps: {\n    include: ['three', 'gsap'],\n  },\n});\n"}], "grading": {"expectations": [{"text": "Generates a complete React + Vite project structure with package.json", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements glassmorphism styling (backdrop-filter, rgba background, border)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes animated aurora/gradient background", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has a pricing section with exactly 3 tiers", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has a features section with visible animation", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements a Three.js or R3F 3D hero element", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses the product name Luminary and the purple/blue color scheme", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes src/index.css with CSS custom properties", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}]}}, {"id": "saas-landing-glassmorphism-without_skill", "prompt": "I'm launching a SaaS product called 'Luminary' \u2014 an AI-powered analytics dashboard. Create a landing page with React + Vite. I want: glassmorphism cards, an aurora gradient animated background, a pricing section with 3 tiers, a features section with animated icons, and a hero with a 3D sphere using Three.js. Dark color scheme, purple/blue accent.", "eval_id": 1, "outputs": [{"name": "index.html", "type": "text", "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta name=\"description\" content=\"Luminary \u2014 AI-powered analytics that illuminates your business intelligence. Real-time insights, beautiful dashboards, enterprise-grade security.\" />\n    <title>Luminary \u2014 AI Analytics Dashboard</title>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin />\n    <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap\" rel=\"stylesheet\" />\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"}, {"name": "package.json", "type": "text", "content": "{\n  \"name\": \"luminary-landing\",\n  \"private\": true,\n  \"version\": \"0.1.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\",\n    \"preview\": \"vite preview\"\n  },\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\",\n    \"three\": \"^0.162.0\",\n    \"@react-three/fiber\": \"^8.15.19\",\n    \"@react-three/drei\": \"^9.99.5\",\n    \"framer-motion\": \"^11.0.8\",\n    \"lucide-react\": \"^0.344.0\"\n  },\n  \"devDependencies\": {\n    \"@types/react\": \"^18.2.56\",\n    \"@types/react-dom\": \"^18.2.19\",\n    \"@vitejs/plugin-react\": \"^4.2.1\",\n    \"vite\": \"^5.1.4\"\n  }\n}\n"}, {"name": "vite.config.js", "type": "text", "content": "import { defineConfig } from 'vite'\nimport react from '@vitejs/plugin-react'\n\nexport default defineConfig({\n  plugins: [react()],\n  server: {\n    port: 3000,\n    open: true,\n  },\n})\n"}], "grading": {"expectations": [{"text": "Generates a complete React + Vite project structure with package.json", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements glassmorphism styling (backdrop-filter, rgba background, border)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes animated aurora/gradient background", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has a pricing section with exactly 3 tiers", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Has a features section with visible animation", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements a Three.js or R3F 3D hero element", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses the product name Luminary and the purple/blue color scheme", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes src/index.css with CSS custom properties", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}]}}, {"id": "agency-site-fullstack-with_skill", "prompt": "Design and code a creative agency website for 'Apex Studio'. Bold, brutalist aesthetic mixed with smooth GSAP animations. Include: a full-screen video/canvas hero, a horizontal scroll section showcasing 5 case studies, a team section with 3D tilt cards, and a contact form. Use Next.js. I need the complete project including a simple Express backend to handle the contact form submissions.", "eval_id": 2, "outputs": [{"name": ".env.example", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,IyA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09CiMgQXBleCBTdHVkaW8g4oCUIEVudmlyb25tZW50IFZhcmlhYmxlcwojIENvcHkgdGhpcyBmaWxlIHRvIC5lbnYubG9jYWwgYW5kIGZpbGwgaW4gcmVhbCB2YWx1ZXMuCiMgTkVWRVIgY29tbWl0IC5lbnYubG9jYWwgdG8gdmVyc2lvbiBjb250cm9sLgojID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KCiMgLS0tLSBDb250YWN0IEZvcm0gKE5leHQuanMgQVBJIHJvdXRlKSAtLS0tCiMgRW1haWwgYWRkcmVzcyB0aGF0IHJlY2VpdmVzIGNvbnRhY3QgZm9ybSBzdWJtaXNzaW9ucwpDT05UQUNUX1RPX0VNQUlMPWhlbGxvQGFwZXhzdHVkaW8uY29tCgojIFNNVFAgY3JlZGVudGlhbHMgZm9yIHNlbmRpbmcgZW1haWxzIHZpYSBOb2RlbWFpbGVyClNNVFBfSE9TVD1zbXRwLmdtYWlsLmNvbQpTTVRQX1BPUlQ9NTg3ClNNVFBfVVNFUj15b3VyLWdtYWlsQGdtYWlsLmNvbQpTTVRQX1BBU1M9eW91ci1hcHAtcGFzc3dvcmQKCiMgLS0tLSBTZXBhcmF0ZSBFeHByZXNzIFNlcnZlciAob3B0aW9uYWwgYm9udXMgYmFja2VuZCkgLS0tLQojIFBvcnQgdGhlIEV4cHJlc3Mgc2VydmVyIGxpc3RlbnMgb24KRVhQUkVTU19QT1JUPTQwMDAKCiMgQWxsb3dlZCBDT1JTIG9yaWdpbiAoeW91ciBOZXh0LmpzIGRldiBVUkwpCkNPUlNfT1JJR0lOPWh0dHA6Ly9sb2NhbGhvc3Q6MzAwMAoKIyBTZWNyZXQgZm9yIGFueSBmdXR1cmUgSldUIHRva2VucwpKV1RfU0VDUkVUPWNoYW5nZS10aGlzLXRvLWEtbG9uZy1yYW5kb20tc3RyaW5nCgojIC0tLS0gUnVudGltZSAtLS0tCk5PREVfRU5WPWRldmVsb3BtZW50Cg=="}, {"name": "README.md", "type": "text", "content": "# Apex Studio \u2014 Creative Agency Website\n\nA bold, brutalist creative agency website built with **Next.js 15**, **Three.js**, and **GSAP**. Features a full-screen particle/3D hero, horizontally-scrolling case studies, 3D-tilt team cards, and a live contact form with email delivery.\n\n---\n\n## What's Inside\n\n| Section | Technology | Notes |\n|---------|-----------|-------|\n| **Hero** | Three.js particle field + wireframe icosahedron | Canvas behind brutalist typographic overlay; mouse-parallax |\n| **Case Studies** | GSAP `ScrollTrigger` horizontal pin | 5 real-content cards with stats, pinned while scrolling horizontally |\n| **Team** | CSS 3D perspective tilt + shine overlay | 4 team members, pointer-tracked rotation, radial shine |\n| **Contact** | React form + Zod validation + Nodemailer | Next.js API route + optional standalone Express server |\n\n### Design System\n\n- **Palette** \u2014 Black `#000`, White `#fff`, Accent red `#ef4444`\n- **Fonts** \u2014 Unbounded (display / headings), Space Grotesk (body), JetBrains Mono (labels/code)\n- **Type** \u2014 Fluid scale via CSS `clamp()`, `--text-xs` through `--text-hero`\n- **Borders** \u2014 3\u20135px solid white/red; brutalist offset shadows on interactive elements\n- **Animations** \u2014 GSAP `ScrollTrigger` for every section reveal, stagger groups, scroll progress bar, magnetic navbar logo\n\n---\n\n## Prerequisites\n\n- **Node.js** \u2265 18\n- **npm** \u2265 9 (or pnpm / yarn)\n\n---\n\n## Quick Start\n\n```bash\n# 1. Install dependencies\nnpm install\n\n# 2. Configure environment\ncp .env.example .env.local\n# Edit .env.local and fill in SMTP credentials (or leave blank to log to stdout)\n\n# 3. Start Next.js dev server\nnpm run dev\n# \u2192 http://localhost:3000\n```\n\n---\n\n## Running the Optional Express Server\n\nThe `server/` directory contains a standalone Express backend that mirrors the Next.js API route. Use it if you want to host the backend separately.\n\n```bash\n# In a second terminal:\nnpm run server\n# \u2192 http://localhost:4000\n\n# Or run both concurrently:\nnpm run dev:all\n```\n\nThe Express server exposes:\n- `POST http://localhost:4000/api/contact` \u2014 contact form handler\n- `GET  http://localhost:4000/health` \u2014 health check\n\n> **Note**: When using the Express server, update your Contact component's `fetch` call from `/api/contact` to `http://localhost:4000/api/contact`.\n\n---\n\n## Environment Variables\n\nCopy `.env.example` to `.env.local` and fill in values:\n\n| Variable | Description |\n|----------|-------------|\n| `CONTACT_TO_EMAIL` | Email address that receives submissions |\n| `SMTP_HOST` | SMTP server (e.g. `smtp.gmail.com`) |\n| `SMTP_PORT` | SMTP port (usually `587`) |\n| `SMTP_USER` | SMTP username / Gmail address |\n| `SMTP_PASS` | SMTP password or Gmail App Password |\n| `EXPRESS_PORT` | Port for the standalone Express server (default `4000`) |\n| `CORS_ORIGIN` | Allowed origin for Express CORS (default `http://localhost:3000`) |\n\n**Gmail users**: enable 2FA and create an [App Password](https://support.google.com/accounts/answer/185833) for `SMTP_PASS`.\n\nIf SMTP is not configured the API route logs submissions to stdout \u2014 useful for local development.\n\n---\n\n## Production Build\n\n```bash\nnpm run build   # builds Next.js app\nnpm run start   # starts production Next.js server\n```\n\n---\n\n## Project Structure\n\n```\napex-studio/\n\u251c\u2500\u2500 src/\n\u2502   \u251c\u2500\u2500 app/\n\u2502   \u2502   \u251c\u2500\u2500 layout.jsx           # Root layout, font imports, metadata\n\u2502   \u2502   \u251c\u2500\u2500 page.jsx             # Home page \u2014 GSAP orchestration\n\u2502   \u2502   \u251c\u2500\u2500 globals.css          # Design tokens, brutalist utilities, GSAP hooks\n\u2502   \u2502   \u2514\u2500\u2500 api/\n\u2502   \u2502       \u2514\u2500\u2500 contact/\n\u2502   \u2502           \u2514\u2500\u2500 route.js     # Next.js API route \u2014 Zod + Nodemailer\n\u2502   \u2514\u2500\u2500 components/\n\u2502       \u251c\u2500\u2500 Navbar.jsx           # Fixed nav, scroll-aware, magnetic logo\n\u2502       \u251c\u2500\u2500 Hero.jsx             # Three.js canvas hero + GSAP text entrance\n\u2502       \u251c\u2500\u2500 CaseStudies.jsx      # GSAP horizontal scroll pin (5 cards)\n\u2502       \u251c\u2500\u2500 Team.jsx             # 3D tilt cards (4 members)\n\u2502       \u2514\u2500\u2500 Contact.jsx          # Multi-field form with validation + success state\n\u251c\u2500\u2500 server/\n\u2502   \u2514\u2500\u2500 index.js                 # Standalone Express contact server (optional)\n\u251c\u2500\u2500 public/                      # Static assets (favicons, images)\n\u251c\u2500\u2500 next.config.js               # Next.js config \u2014 security headers, transpile\n\u251c\u2500\u2500 .env.example                 # Environment variable documentation\n\u2514\u2500\u2500 package.json\n```\n\n---\n\n## Top 5 Things to Customise First\n\n1. **Brand name & copy** \u2014 Search for `APEX STUDIO` / `Apex Studio` across `Navbar.jsx`, `Hero.jsx`, `layout.jsx`, and `page.jsx`.\n2. **Accent colour** \u2014 Change `#ef4444` to your brand colour in `globals.css` (`--color-accent`). One variable controls the entire palette.\n3. **Case study content** \u2014 Edit the `CASE_STUDIES` array in `CaseStudies.jsx` with real project data.\n4. **Team members** \u2014 Edit the `TEAM` array in `Team.jsx`.\n5. **SMTP credentials** \u2014 Fill `.env.local` so the contact form actually sends emails.\n\n---\n\n## Accessibility\n\n- WCAG 2.1 AA colour contrast maintained throughout (white on black, red on black \u2265 4.5:1)\n- `prefers-reduced-motion` disables all CSS animations\n- Focus-visible rings on all interactive elements\n- Semantic HTML (`<nav>`, `<section>`, `<article>`, `<h1>`\u2013`<h3>`)\n- `aria-label` on all icon-only and decorative elements\n- Form error messages use `role=\"alert\"` and `aria-describedby`\n\n---\n\n## Tech Stack\n\n| Layer | Library | Version |\n|-------|---------|---------|\n| Framework | Next.js (App Router) | ^15.1.0 |\n| UI | React | ^19.0.0 |\n| 3D | Three.js | ^0.171.0 |\n| Animation | GSAP + ScrollTrigger | ^3.12.5 |\n| Validation | Zod | ^3.23.0 |\n| Email | Nodemailer | ^6.9.16 |\n| Express (optional) | Express 4 + Helmet + CORS + Rate-Limit | ^4.21.0 |\n"}, {"name": "next.config.js", "type": "text", "content": "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  // Three.js uses ESM \u2014 transpile to avoid module resolution errors\n  transpilePackages: ['three'],\n\n  // Security headers\n  async headers() {\n    return [\n      {\n        source: '/(.*)',\n        headers: [\n          { key: 'X-Content-Type-Options',   value: 'nosniff' },\n          { key: 'X-Frame-Options',           value: 'DENY' },\n          { key: 'X-XSS-Protection',          value: '1; mode=block' },\n          { key: 'Referrer-Policy',           value: 'strict-origin-when-cross-origin' },\n          { key: 'Permissions-Policy',        value: 'camera=(), microphone=(), geolocation=()' },\n        ],\n      },\n    ];\n  },\n\n  // Webpack: treat Three.js addons as client-only, exclude from server bundle\n  webpack(config, { isServer }) {\n    if (isServer) {\n      config.externals = [...(config.externals || []), 'three'];\n    }\n    return config;\n  },\n};\n\nmodule.exports = nextConfig;\n"}, {"name": "package.json", "type": "text", "content": "{\n  \"name\": \"apex-studio\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Apex Studio \u2014 Bold Creative Agency Website\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"lint\": \"next lint\",\n    \"server\": \"node server/index.js\",\n    \"dev:all\": \"concurrently \\\"npm run dev\\\" \\\"npm run server\\\"\"\n  },\n  \"dependencies\": {\n    \"next\": \"^15.1.0\",\n    \"react\": \"^19.0.0\",\n    \"react-dom\": \"^19.0.0\",\n    \"gsap\": \"^3.12.5\",\n    \"three\": \"^0.171.0\",\n    \"@react-three/fiber\": \"^8.17.0\",\n    \"@react-three/drei\": \"^9.117.0\",\n    \"nodemailer\": \"^6.9.16\",\n    \"zod\": \"^3.23.0\",\n    \"express\": \"^4.21.0\",\n    \"cors\": \"^2.8.5\",\n    \"helmet\": \"^8.0.0\",\n    \"express-rate-limit\": \"^7.4.0\"\n  },\n  \"devDependencies\": {\n    \"concurrently\": \"^9.1.0\",\n    \"eslint\": \"^9.0.0\",\n    \"eslint-config-next\": \"^15.1.0\"\n  },\n  \"engines\": {\n    \"node\": \">=18.0.0\"\n  }\n}\n"}], "grading": {"expectations": [{"text": "Creates a Next.js project structure with proper App Router layout", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses GSAP for animations (imported or via CDN)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements horizontal scroll section for case studies", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements 3D tilt card effect on team section", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes a contact form wired to a backend endpoint", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Provides an Express backend or Next.js API route for form handling", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes package.json, .env.example, and README", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}]}}, {"id": "agency-site-fullstack-without_skill", "prompt": "Design and code a creative agency website for 'Apex Studio'. Bold, brutalist aesthetic mixed with smooth GSAP animations. Include: a full-screen video/canvas hero, a horizontal scroll section showcasing 5 case studies, a team section with 3D tilt cards, and a contact form. Use Next.js. I need the complete project including a simple Express backend to handle the contact form submissions.", "eval_id": 2, "outputs": [{"name": ".gitignore", "type": "binary", "mime": "application/octet-stream", "data_uri": "data:application/octet-stream;base64,IyBEZXBlbmRlbmNpZXMKbm9kZV9tb2R1bGVzLwoKIyBOZXh0LmpzIGJ1aWxkIG91dHB1dAoubmV4dC8Kb3V0LwoKIyBTZWNyZXRzCi5lbnYKYmFja2VuZC8uZW52CgojIE9TCi5EU19TdG9yZQpUaHVtYnMuZGIKCiMgRWRpdG9yCi52c2NvZGUvCi5pZGVhLwoKIyBMb2dzCioubG9nCm5wbS1kZWJ1Zy5sb2cqCg=="}, {"name": "jsconfig.json", "type": "text", "content": "{\n  \"compilerOptions\": {\n    \"baseUrl\": \".\",\n    \"paths\": {\n      \"@/*\": [\"./src/*\"]\n    }\n  }\n}\n"}, {"name": "next.config.js", "type": "text", "content": "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  reactStrictMode: true,\n  images: {\n    domains: ['images.unsplash.com', 'picsum.photos'],\n    formats: ['image/avif', 'image/webp'],\n  },\n  experimental: {\n    optimizeCss: false,\n  },\n  // Allow GSAP and other client-side heavy libraries\n  transpilePackages: ['gsap'],\n};\n\nmodule.exports = nextConfig;\n"}, {"name": "package.json", "type": "text", "content": "{\n  \"name\": \"apex-studio\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\",\n    \"lint\": \"next lint\",\n    \"backend\": \"node backend/server.js\",\n    \"dev:all\": \"concurrently \\\"npm run dev\\\" \\\"npm run backend\\\"\"\n  },\n  \"dependencies\": {\n    \"next\": \"14.2.5\",\n    \"react\": \"^18.3.1\",\n    \"react-dom\": \"^18.3.1\",\n    \"gsap\": \"^3.12.5\",\n    \"@gsap/react\": \"^2.1.1\",\n    \"lenis\": \"^1.1.9\",\n    \"express\": \"^4.19.2\",\n    \"cors\": \"^2.8.5\",\n    \"nodemailer\": \"^6.9.14\",\n    \"body-parser\": \"^1.20.3\",\n    \"concurrently\": \"^8.2.2\",\n    \"axios\": \"^1.7.2\"\n  },\n  \"devDependencies\": {\n    \"eslint\": \"^8.57.0\",\n    \"eslint-config-next\": \"14.2.5\"\n  }\n}\n"}, {"name": "postcss.config.js", "type": "text", "content": "module.exports = {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n};\n"}], "grading": {"expectations": [{"text": "Creates a Next.js project structure with proper App Router layout", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Uses GSAP for animations (imported or via CDN)", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements horizontal scroll section for case studies", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Implements 3D tilt card effect on team section", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes a contact form wired to a backend endpoint", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Provides an Express backend or Next.js API route for form handling", "passed": true, "evidence": "Verified by automated script scanning file content and structure."}, {"text": "Includes package.json, .env.example, and README", "passed": false, "evidence": "Verified by automated script scanning file content and structure."}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "fullstack-website-designer", "skill_path": "/home/user/Security-skill/plugins/fullstack-website-designer/skills/fullstack-website-designer", "executor_model": "claude-sonnet-4-6", "timestamp": "2026-03-20T07:11:52Z", "evals_run": ["portfolio-static-3d-hero", "saas-landing-glassmorphism", "agency-site-fullstack"], "runs_per_configuration": 1}, "runs": [{"eval_id": 0, "eval_name": "portfolio-static-3d-hero", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Single self-contained index.html file", "passed": true, "evidence": "index.html present, no build step"}, {"text": "Three.js or CSS 3D animation in hero", "passed": true, "evidence": "IcosahedronGeometry + PointsMaterial particle field via importmap CDN"}, {"text": "4+ sections (hero, about, skills, projects, contact)", "passed": true, "evidence": "All 5 section ids present"}, {"text": "Dark color scheme", "passed": true, "evidence": "--bg: #04040d used throughout"}, {"text": "Scroll animations", "passed": true, "evidence": "IntersectionObserver + data-reveal/stagger pattern"}, {"text": "Responsive layout", "passed": true, "evidence": "@media max-width:768px + clamp() fluid type"}, {"text": "No TODO placeholders", "passed": true, "evidence": "No TODO or lorem ipsum found"}], "notes": []}, {"eval_id": 0, "eval_name": "portfolio-static-3d-hero", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Single self-contained index.html file", "passed": true, "evidence": "index.html present"}, {"text": "Three.js or CSS 3D animation in hero", "passed": true, "evidence": "Canvas 3D animation present"}, {"text": "4+ sections", "passed": true, "evidence": "Sections found"}, {"text": "Dark color scheme", "passed": true, "evidence": "Dark bg colors"}, {"text": "Scroll animations", "passed": true, "evidence": "Scroll logic present"}, {"text": "Responsive layout", "passed": true, "evidence": "@media queries found"}, {"text": "No TODO placeholders", "passed": true, "evidence": "Clean"}], "notes": ["Less structured \u2014 hardcoded hex values throughout vs skill's CSS custom property architecture"]}, {"eval_id": 1, "eval_name": "saas-landing-glassmorphism", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Complete React + Vite project with package.json", "passed": true, "evidence": "package.json, vite.config.js, src/main.jsx, index.html"}, {"text": "Glassmorphism CSS (backdrop-filter + rgba)", "passed": true, "evidence": "backdrop-filter: blur() in index.css"}, {"text": "Animated aurora/gradient background", "passed": true, "evidence": "Aurora keyframe animation"}, {"text": "Pricing section with 3 tiers", "passed": true, "evidence": "Free/Pro/Enterprise tiers present"}, {"text": "Features section with animation", "passed": true, "evidence": "Features.jsx with animation classes"}, {"text": "Three.js 3D hero element", "passed": true, "evidence": "hero-scene.js with sphere + rotation"}, {"text": "Luminary brand + purple/blue", "passed": true, "evidence": "Luminary name + #6366f1 palette"}, {"text": "src/index.css with CSS custom properties", "passed": true, "evidence": ":root {} declarations present"}], "notes": []}, {"eval_id": 1, "eval_name": "saas-landing-glassmorphism", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 8, "failed": 0, "total": 8, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Complete React + Vite project with package.json", "passed": true, "evidence": "project structure present"}, {"text": "Glassmorphism CSS (backdrop-filter + rgba)", "passed": true, "evidence": "backdrop-filter found"}, {"text": "Animated aurora/gradient background", "passed": true, "evidence": "@keyframes aurora"}, {"text": "Pricing section with 3 tiers", "passed": true, "evidence": "3 tiers present"}, {"text": "Features section with animation", "passed": true, "evidence": "Features.jsx present"}, {"text": "Three.js 3D hero element", "passed": true, "evidence": "HeroSphere.jsx"}, {"text": "Luminary brand + purple/blue", "passed": true, "evidence": "brand present"}, {"text": "src/index.css with CSS custom properties", "passed": true, "evidence": ":root vars"}], "notes": ["Missing Pricing as dedicated component; inline in App.jsx. Less thorough token system."]}, {"eval_id": 2, "eval_name": "agency-site-fullstack", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Next.js App Router structure", "passed": true, "evidence": "src/app/layout.jsx + page.jsx"}, {"text": "GSAP animations", "passed": true, "evidence": "GSAP + ScrollTrigger in components"}, {"text": "Horizontal scroll case studies", "passed": true, "evidence": "CaseStudies.jsx with GSAP scrub"}, {"text": "3D tilt card effect on team", "passed": true, "evidence": "Team.jsx with perspective + rotateX/Y"}, {"text": "Contact form wired to backend", "passed": true, "evidence": "fetch('/api/contact') in Contact.jsx"}, {"text": "API route or Express backend", "passed": true, "evidence": "src/app/api/contact/route.js POST handler"}, {"text": "package.json + .env.example + README", "passed": true, "evidence": "All three files present"}], "notes": []}, {"eval_id": 2, "eval_name": "agency-site-fullstack", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.857, "passed": 6, "failed": 1, "total": 7, "time_seconds": null, "tokens": null, "errors": 0}, "expectations": [{"text": "Next.js App Router structure", "passed": true, "evidence": "next.config.js + src/app/"}, {"text": "GSAP animations", "passed": true, "evidence": "GSAP references"}, {"text": "Horizontal scroll case studies", "passed": true, "evidence": "Horizontal scroll pattern"}, {"text": "3D tilt card effect on team", "passed": true, "evidence": "Tilt effect present"}, {"text": "Contact form wired to backend", "passed": true, "evidence": "Contact form present"}, {"text": "API route or Express backend", "passed": true, "evidence": "Handler found"}, {"text": "package.json + .env.example + README", "passed": false, "evidence": ".env.example missing \u2014 without skill checklist enforcement"}], "notes": [".env.example missing \u2014 skill's QA debugger checklist explicitly enforces this"]}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": null, "stddev": null}, "tokens": {"mean": null, "stddev": null}}, "without_skill": {"pass_rate": {"mean": 0.952, "stddev": 0.082, "min": 0.857, "max": 1.0}, "time_seconds": {"mean": null, "stddev": null}, "tokens": {"mean": null, "stddev": null}}, "delta": {"pass_rate": "+0.048", "time_seconds": "N/A", "tokens": "N/A"}}, "notes": ["Most assertions pass in both configs \u2014 qualitative differences are the main differentiator. With-skill output has structured CSS custom property design token systems, explicit brutalist/glassmorphism patterns from design-systems.md, and enforced checklists.", "Only hard failure: .env.example missing in agency without-skill. Skill QA debugger checklist explicitly enforces this.", "Iteration 2 should tighten assertions: add CSS custom property usage check, prefers-reduced-motion support, and aria-label completeness.", "With-skill portfolio includes magnetic buttons, dual-geometry 3D scene, scroll progress bar \u2014 without-skill simpler single-geometry implementation.", "Both configs handle basic website structure well. Skill value is in design system depth, 3D scene quality, and QA completeness."]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

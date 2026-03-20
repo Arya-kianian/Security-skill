@@ -1,0 +1,14 @@
+{
+  "eval_id": 1,
+  "eval_name": "saas-landing-glassmorphism",
+  "prompt": "I'm launching a SaaS product called 'Luminary' — an AI-powered analytics dashboard. Create a landing page with React + Vite. I want: glassmorphism cards, an aurora gradient animated background, a pricing section with 3 tiers, a features section with animated icons, and a hero with a 3D sphere using Three.js. Dark color scheme, purple/blue accent.",
+  "assertions": [
+    { "text": "Generates a complete React + Vite project structure with package.json" },
+    { "text": "Implements glassmorphism styling (backdrop-filter, rgba background, border)" },
+    { "text": "Includes animated aurora/gradient background" },
+    { "text": "Has a pricing section with exactly 3 tiers" },
+    { "text": "Has a features section with visible animation" },
+    { "text": "Implements a Three.js or R3F 3D hero element" },
+    { "text": "Uses the product name 'Luminary' and the purple/blue color scheme" }
+  ]
+}

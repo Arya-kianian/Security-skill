@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "Generates a complete React + Vite project structure with package.json",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Implements glassmorphism styling (backdrop-filter, rgba background, border)",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Includes animated aurora/gradient background",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Has a pricing section with exactly 3 tiers",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Has a features section with visible animation",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Implements a Three.js or R3F 3D hero element",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Uses the product name Luminary and the purple/blue color scheme",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Includes src/index.css with CSS custom properties",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    }
+  ]
+}

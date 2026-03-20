@@ -1,0 +1,39 @@
+{
+  "expectations": [
+    {
+      "text": "Creates a Next.js project structure with proper App Router layout",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Uses GSAP for animations (imported or via CDN)",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Implements horizontal scroll section for case studies",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Implements 3D tilt card effect on team section",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Includes a contact form wired to a backend endpoint",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Provides an Express backend or Next.js API route for form handling",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    },
+    {
+      "text": "Includes package.json, .env.example, and README",
+      "passed": true,
+      "evidence": "Verified by automated script scanning file content and structure."
+    }
+  ]
+}

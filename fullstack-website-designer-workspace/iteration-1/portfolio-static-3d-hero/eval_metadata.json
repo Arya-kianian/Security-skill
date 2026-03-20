@@ -1,0 +1,14 @@
+{
+  "eval_id": 0,
+  "eval_name": "portfolio-static-3d-hero",
+  "prompt": "Build me a personal portfolio website. I'm a frontend developer. I want something dark, futuristic, with a 3D animated background — maybe floating particles or a rotating geometric shape. Include sections for hero, about, skills, projects (show 3 placeholder projects), and contact. Keep it to a single HTML file with vanilla JS so I can just open it in a browser.",
+  "assertions": [
+    { "text": "Delivers a single self-contained index.html file (no build step required)" },
+    { "text": "Includes Three.js or CSS 3D animation in the hero section" },
+    { "text": "Has at least 4 distinct sections: hero, about, skills/projects, contact" },
+    { "text": "Uses a dark color scheme throughout" },
+    { "text": "Implements scroll animations or transitions between sections" },
+    { "text": "Layout is responsive (uses media queries or fluid units)" },
+    { "text": "No placeholder TODOs or lorem ipsum text remain" }
+  ]
+}
