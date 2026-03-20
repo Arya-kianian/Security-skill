@@ -190,7 +190,7 @@
       "version": "1.2.0",
       "description": "Static analysis toolkit with CodeQL, Semgrep, and SARIF parsing for security vulnerability detection",
       "author": {
-        "name": "Axel Mierczuk & Paweł Płatek"
+        "name": "Axel Mierczuk & Pawe\u0142 P\u0142atek"
       },
       "source": "./plugins/static-analysis"
     },
@@ -208,7 +208,7 @@
       "version": "1.0.1",
       "description": "Skills from the Trail of Bits Application Security Testing Handbook (appsec.guide)",
       "author": {
-        "name": "Paweł Płatek"
+        "name": "Pawe\u0142 P\u0142atek"
       },
       "source": "./plugins/testing-handbook-skills"
     },
@@ -329,7 +329,7 @@
       "version": "1.2.0",
       "description": "Audits GitHub Actions workflows for security vulnerabilities in AI agent integrations (Claude Code Action, Gemini CLI, OpenAI Codex, GitHub AI Inference)",
       "author": {
-        "name": "Emilio López & Will Vandevanter"
+        "name": "Emilio L\u00f3pez & Will Vandevanter"
       },
       "source": "./plugins/agentic-actions-auditor"
     },
@@ -338,7 +338,7 @@
       "version": "1.0.0",
       "description": "Automatically reviews and fixes Claude Code skills through iterative refinement until they meet quality standards. Requires plugin-dev plugin.",
       "author": {
-        "name": "Paweł Płatek",
+        "name": "Pawe\u0142 P\u0142atek",
         "url": "https://github.com/GrosQuildu"
       },
       "source": "./plugins/skill-improver"
@@ -351,6 +351,16 @@
         "name": "Maciej Domanski"
       },
       "source": "./plugins/fp-check"
+    },
+    {
+      "name": "skill-creator",
+      "version": "1.0.0",
+      "description": "Create new skills, improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, update or optimize an existing skill, run evals to test a skill, or benchmark skill performance with variance analysis.",
+      "author": {
+        "name": "Anthropic",
+        "email": "support@anthropic.com"
+      },
+      "source": "./plugins/skill-creator"
     }
   ]
 }
